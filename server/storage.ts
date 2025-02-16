@@ -6,6 +6,8 @@ export interface IStorage {
   getUpiIds(): Promise<UpiId[]>;
   addUpiId(upi: InsertUpi): Promise<UpiId>;
   toggleUpiId(id: number): Promise<UpiId>;
+  blockUpiId(id: number): Promise<UpiId>;
+  unblockUpiId(id: number): Promise<UpiId>;
   createTransaction(tx: InsertTransaction): Promise<Transaction>;
   getTransaction(reference: string): Promise<Transaction | undefined>;
 }
@@ -30,6 +32,24 @@ export class DatabaseStorage implements IStorage {
     const [updated] = await db
       .update(upiIds)
       .set({ isActive: !upi.isActive })
+      .where(eq(upiIds.id, id))
+      .returning();
+    return updated;
+  }
+
+  async blockUpiId(id: number): Promise<UpiId> {
+    const [updated] = await db
+      .update(upiIds)
+      .set({ blockedAt: new Date() })
+      .where(eq(upiIds.id, id))
+      .returning();
+    return updated;
+  }
+
+  async unblockUpiId(id: number): Promise<UpiId> {
+    const [updated] = await db
+      .update(upiIds)
+      .set({ blockedAt: null })
       .where(eq(upiIds.id, id))
       .returning();
     return updated;

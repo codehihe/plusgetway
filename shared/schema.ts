@@ -7,6 +7,7 @@ export const upiIds = pgTable("upi_ids", {
   upiId: text("upi_id").notNull().unique(),
   merchantName: text("merchant_name").notNull(),
   isActive: boolean("is_active").default(true).notNull(),
+  blockedAt: timestamp("blocked_at"),
 });
 
 export const transactions = pgTable("transactions", {
@@ -19,7 +20,7 @@ export const transactions = pgTable("transactions", {
   timestamp: timestamp("timestamp").defaultNow().notNull(),
 });
 
-export const insertUpiSchema = createInsertSchema(upiIds).omit({ id: true, isActive: true });
+export const insertUpiSchema = createInsertSchema(upiIds).omit({ id: true, isActive: true, blockedAt: true });
 export const insertTransactionSchema = createInsertSchema(transactions).omit({ id: true, timestamp: true });
 
 export type UpiId = typeof upiIds.$inferSelect;

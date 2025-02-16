@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import { createServer } from "http";
 import { storage } from "./storage";
+import { nanoid } from "nanoid";
 import { ADMIN_PIN, insertUpiSchema, insertTransactionSchema } from "@shared/schema";
 
 export async function registerRoutes(app: Express) {
@@ -35,6 +36,18 @@ export async function registerRoutes(app: Express) {
     res.json(upiId);
   });
 
+  app.post("/api/upi/:id/block", async (req, res) => {
+    const id = parseInt(req.params.id);
+    const upiId = await storage.blockUpiId(id);
+    res.json(upiId);
+  });
+
+  app.post("/api/upi/:id/unblock", async (req, res) => {
+    const id = parseInt(req.params.id);
+    const upiId = await storage.unblockUpiId(id);
+    res.json(upiId);
+  });
+
   app.post("/api/transactions", async (req, res) => {
     const result = insertTransactionSchema.safeParse(req.body);
     if (!result.success) {
@@ -42,7 +55,11 @@ export async function registerRoutes(app: Express) {
       return;
     }
 
-    const transaction = await storage.createTransaction(result.data);
+    const reference = nanoid();
+    const transaction = await storage.createTransaction({
+      ...result.data,
+      reference,
+    });
     res.json(transaction);
   });
 
