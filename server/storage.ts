@@ -1,6 +1,6 @@
 import { UpiId, InsertUpi, Transaction, InsertTransaction, upiIds, transactions } from "@shared/schema";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 
 export interface IStorage {
   getUpiIds(): Promise<UpiId[]>;
@@ -10,6 +10,7 @@ export interface IStorage {
   unblockUpiId(id: number): Promise<UpiId>;
   createTransaction(tx: InsertTransaction): Promise<Transaction>;
   getTransaction(reference: string): Promise<Transaction | undefined>;
+  getTransactions(): Promise<Transaction[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -61,6 +62,7 @@ export class DatabaseStorage implements IStorage {
       .values({
         ...tx,
         status: tx.status || "pending",
+        reference: tx.reference,
         timestamp: new Date(),
       })
       .returning();
@@ -73,6 +75,13 @@ export class DatabaseStorage implements IStorage {
       .from(transactions)
       .where(eq(transactions.reference, reference));
     return transaction;
+  }
+
+  async getTransactions(): Promise<Transaction[]> {
+    return await db
+      .select()
+      .from(transactions)
+      .orderBy(desc(transactions.timestamp));
   }
 }
 

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Link } from "wouter";
-import { ArrowLeft, Power, Ban, Unlock } from "lucide-react";
+import { ArrowLeft, Power, Ban, Unlock, History } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function AdminPanel() {
@@ -77,6 +77,12 @@ export default function AdminPanel() {
             </Button>
           </Link>
           <h1 className="text-3xl font-bold text-red-500">Admin Panel</h1>
+          <div className="flex-1" />
+          <Link href="/admin/transactions">
+            <Button variant="ghost" size="icon">
+              <History className="h-5 w-5 text-red-400" />
+            </Button>
+          </Link>
         </div>
 
         <Card className="p-6 mb-8 backdrop-blur-lg bg-white/10 border-red-500/20">

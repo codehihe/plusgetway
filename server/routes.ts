@@ -48,6 +48,11 @@ export async function registerRoutes(app: Express) {
     res.json(upiId);
   });
 
+  app.get("/api/transactions", async (req, res) => {
+    const transactions = await storage.getTransactions();
+    res.json(transactions);
+  });
+
   app.post("/api/transactions", async (req, res) => {
     const result = insertTransactionSchema.safeParse(req.body);
     if (!result.success) {

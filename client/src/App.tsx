@@ -4,6 +4,7 @@ import { queryClient } from "./lib/queryClient";
 import { Toaster } from "@/components/ui/toaster";
 import Home from "@/pages/Home";
 import AdminPanel from "@/pages/AdminPanel";
+import TransactionHistory from "@/pages/TransactionHistory";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -11,6 +12,7 @@ function Router() {
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/admin" component={AdminPanel} />
+      <Route path="/admin/transactions" component={TransactionHistory} />
       <Route component={NotFound} />
     </Switch>
   );
