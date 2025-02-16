@@ -11,12 +11,15 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion, AnimatePresence } from "framer-motion";
-import { Timer, AlertTriangle, CheckCircle2, XCircle, IndianRupee, Copy, ExternalLink } from "lucide-react";
+import { Timer, AlertTriangle, CheckCircle2, XCircle, IndianRupee, Copy, ExternalLink, Smartphone } from "lucide-react";
 
 const PAYMENT_TIMEOUT = 180; // 3 minutes in seconds
 
 const paymentSchema = z.object({
-  amount: z.string().min(1, "Amount is required"),
+  amount: z.string()
+    .min(1, "Amount is required")
+    .regex(/^\d+(\.\d{1,2})?$/, "Please enter a valid amount")
+    .refine((val) => parseFloat(val) > 0, "Amount must be greater than 0"),
 });
 
 type PaymentFormData = z.infer<typeof paymentSchema>;
@@ -26,14 +29,22 @@ const generateUpiLink = (upi: UpiId, amount: string, reference: string) => {
   const cleanAmount = parseFloat(amount).toFixed(2);
   const cleanReference = reference.replace(/[^a-zA-Z0-9]/g, '');
 
+  // Format UPI ID and merchant name
+  const cleanUpiId = upi.upiId.trim();
+  const cleanMerchantName = encodeURIComponent(upi.merchantName.trim());
+
+  // Build UPI deep link with all required parameters
   const params = new URLSearchParams({
-    pa: upi.upiId.trim(),
-    pn: upi.merchantName.trim(),
+    pa: cleanUpiId,
+    pn: cleanMerchantName,
     am: cleanAmount,
     tr: cleanReference,
     cu: "INR",
-    tn: `Payment to ${upi.merchantName}`,
+    tn: `Payment to ${cleanMerchantName}`,
+    mc: "0000",  // Merchant category code
+    mode: "04",  // QR code mode
   });
+
   return `upi://pay?${params.toString()}`;
 };
 
@@ -191,6 +202,8 @@ export default function PaymentCard({ upi }: { upi: UpiId }) {
                 <Input
                   type="number"
                   placeholder="Enter amount"
+                  step="0.01"
+                  min="0.01"
                   {...form.register("amount")}
                   className="pl-9 bg-white/5 border-red-500/20 text-white"
                 />
@@ -213,7 +226,10 @@ export default function PaymentCard({ upi }: { upi: UpiId }) {
                   level="H"
                   className="w-full h-auto"
                 />
-                <p className="text-black text-sm mt-4">Scan with any UPI app</p>
+                <div className="text-center mt-4">
+                  <p className="text-black font-medium">Scan with any UPI app</p>
+                  <p className="text-gray-500 text-sm mt-1">Amount: ₹{parseFloat(form.getValues("amount")).toFixed(2)}</p>
+                </div>
               </div>
 
               <div className="flex gap-2">
@@ -230,7 +246,7 @@ export default function PaymentCard({ upi }: { upi: UpiId }) {
                   className="flex-1 border-red-500/20 text-red-400"
                   onClick={() => window.open(upiLink, '_blank')}
                 >
-                  <ExternalLink className="w-4 h-4 mr-2" />
+                  <Smartphone className="w-4 h-4 mr-2" />
                   Open in App
                 </Button>
               </div>

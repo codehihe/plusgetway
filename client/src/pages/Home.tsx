@@ -4,23 +4,46 @@ import { UpiId } from "@shared/schema";
 import PaymentCard from "@/components/PaymentCard";
 import AdminLogin from "@/components/AdminLogin";
 import { Button } from "@/components/ui/button";
-import { Settings } from "lucide-react";
-import { Link } from "wouter";
+import { Settings, AlertCircle } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Card } from "@/components/ui/card";
 
 export default function Home() {
   const [showAdminLogin, setShowAdminLogin] = useState(false);
-  
-  const { data: upiIds } = useQuery<UpiId[]>({
+
+  const { data: upiIds, isLoading } = useQuery<UpiId[]>({
     queryKey: ["/api/upi"],
   });
 
   const activeUpiIds = upiIds?.filter(upi => upi.isActive) || [];
 
+  const container = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const item = {
+    hidden: { y: 20, opacity: 0 },
+    show: { y: 0, opacity: 1 }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-950 to-gray-900 p-4">
       <div className="max-w-lg mx-auto">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-red-500">UPI Payment</h1>
+          <motion.h1 
+            className="text-3xl font-bold text-red-500"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            UPI Payment
+          </motion.h1>
           <Button 
             variant="ghost" 
             size="icon"
@@ -30,16 +53,72 @@ export default function Home() {
           </Button>
         </div>
 
-        {activeUpiIds.length > 0 ? (
-          activeUpiIds.map(upi => (
-            <PaymentCard key={upi.id} upi={upi} />
-          ))
-        ) : (
-          <div className="text-center text-gray-400 mt-12">
-            <p>No UPI IDs configured.</p>
-            <p>Please contact the administrator.</p>
-          </div>
-        )}
+        <AnimatePresence mode="wait">
+          {isLoading ? (
+            <motion.div
+              key="loading"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <Card className="p-8 backdrop-blur-lg bg-white/10 border-red-500/20">
+                <div className="flex flex-col items-center space-y-4">
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                  >
+                    <div className="w-8 h-8 border-2 border-red-500 border-t-transparent rounded-full" />
+                  </motion.div>
+                  <p className="text-gray-400">Loading payment options...</p>
+                </div>
+              </Card>
+            </motion.div>
+          ) : activeUpiIds.length > 0 ? (
+            <motion.div
+              variants={container}
+              initial="hidden"
+              animate="show"
+            >
+              {activeUpiIds.map(upi => (
+                <motion.div key={upi.id} variants={item}>
+                  <PaymentCard upi={upi} />
+                </motion.div>
+              ))}
+            </motion.div>
+          ) : (
+            <motion.div
+              key="no-upi"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+            >
+              <Card className="p-8 backdrop-blur-lg bg-white/10 border-red-500/20">
+                <div className="flex flex-col items-center text-center space-y-4">
+                  <AlertCircle className="w-12 h-12 text-red-400" />
+                  <div>
+                    <h2 className="text-xl font-semibold text-red-400 mb-2">
+                      No Payment Methods Available
+                    </h2>
+                    <p className="text-gray-400">
+                      No active UPI IDs are currently configured.
+                    </p>
+                    <p className="text-gray-500 text-sm mt-2">
+                      Please contact the administrator to set up payment methods.
+                    </p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    className="mt-4 border-red-500/20 text-red-400"
+                    onClick={() => setShowAdminLogin(true)}
+                  >
+                    <Settings className="w-4 h-4 mr-2" />
+                    Admin Login
+                  </Button>
+                </div>
+              </Card>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       <AdminLogin 
