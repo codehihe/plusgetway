@@ -21,8 +21,13 @@ export async function registerRoutes(app: Express) {
 
   // UPI Management
   app.get("/api/upi", async (req, res) => {
-    const upiIds = await storage.getUpiIds();
-    res.json(upiIds);
+    try {
+      const upiIds = await storage.getUpiIds();
+      res.json(upiIds);
+    } catch (error) {
+      console.error("Error fetching UPI IDs:", error);
+      res.status(500).json({ message: "Failed to fetch UPI IDs" });
+    }
   });
 
   app.post("/api/upi", async (req, res) => {
@@ -80,22 +85,34 @@ export async function registerRoutes(app: Express) {
       // Validate UPI ID status
       const upiDetails = await storage.getUpiIdByAddress(result.data.upiId);
       if (!upiDetails) {
-        res.status(404).json({ message: "UPI ID not found" });
+        res.status(404).json({ 
+          message: "Invalid UPI ID. Please check and try again.",
+          code: "INVALID_UPI"
+        });
         return;
       }
 
       if (upiDetails.blockedAt) {
-        res.status(403).json({ message: "This UPI ID is blocked" });
+        res.status(403).json({ 
+          message: "This UPI ID is blocked. Please contact support.",
+          code: "UPI_BLOCKED"
+        });
         return;
       }
 
       if (upiDetails.deletedAt) {
-        res.status(403).json({ message: "This UPI ID is no longer active" });
+        res.status(403).json({ 
+          message: "This UPI ID is no longer active. Please use a different UPI ID.",
+          code: "UPI_DELETED"
+        });
         return;
       }
 
       if (!upiDetails.isActive) {
-        res.status(403).json({ message: "This UPI ID is currently inactive" });
+        res.status(403).json({ 
+          message: "This UPI ID is currently inactive. Please try again later.",
+          code: "UPI_INACTIVE"
+        });
         return;
       }
 
@@ -109,12 +126,21 @@ export async function registerRoutes(app: Express) {
         status: "pending"
       });
 
-      res.json(transaction);
+      // Return detailed response
+      res.json({
+        ...transaction,
+        upiDetails: {
+          id: upiDetails.upiId,
+          name: upiDetails.merchantName,
+          isActive: upiDetails.isActive
+        }
+      });
     } catch (error) {
       console.error("Transaction creation error:", error);
       res.status(500).json({ 
-        message: "Failed to process transaction",
-        error: error instanceof Error ? error.message : "Unknown error"
+        message: "Failed to process transaction. Please try again.",
+        error: error instanceof Error ? error.message : "Unknown error",
+        code: "TRANSACTION_FAILED"
       });
     }
   });
@@ -151,13 +177,19 @@ export async function registerRoutes(app: Express) {
       // This should be implemented based on your UPI gateway provider's specifications
 
       if (!reference || !status) {
-        res.status(400).json({ message: "Missing required fields" });
+        res.status(400).json({ 
+          message: "Missing required fields",
+          code: "INVALID_WEBHOOK_DATA"
+        });
         return;
       }
 
       // Validate status
       if (!['success', 'failed'].includes(status)) {
-        res.status(400).json({ message: "Invalid status" });
+        res.status(400).json({ 
+          message: "Invalid status",
+          code: "INVALID_STATUS"
+        });
         return;
       }
 
@@ -167,12 +199,17 @@ export async function registerRoutes(app: Express) {
       // Broadcast status update via WebSocket
       broadcastPaymentUpdate(reference, status);
 
-      res.json({ success: true, transaction });
+      res.json({ 
+        success: true, 
+        transaction,
+        message: `Transaction ${status === 'success' ? 'completed' : 'failed'} successfully`
+      });
     } catch (error) {
       console.error("Webhook processing error:", error);
       res.status(500).json({ 
         message: "Failed to process webhook",
-        error: error instanceof Error ? error.message : "Unknown error"
+        error: error instanceof Error ? error.message : "Unknown error",
+        code: "WEBHOOK_FAILED"
       });
     }
   });

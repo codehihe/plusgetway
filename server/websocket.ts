@@ -15,16 +15,23 @@ export const setupWebSocketServer = (server: Server) => {
     ws.on('message', (message: string) => {
       try {
         const data = JSON.parse(message.toString());
-        
+
         if (data.type === 'subscribe' && data.reference) {
           ws.reference = data.reference;
           if (!clients.has(data.reference)) {
             clients.set(data.reference, new Set());
           }
           clients.get(data.reference)?.add(ws);
+          console.log(`Client subscribed to reference: ${data.reference}`);
         }
       } catch (error) {
         console.error('Error processing WebSocket message:', error);
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({
+            type: 'error',
+            message: 'Invalid message format'
+          }));
+        }
       }
     });
 
@@ -36,13 +43,26 @@ export const setupWebSocketServer = (server: Server) => {
           if (clientSet.size === 0) {
             clients.delete(ws.reference);
           }
+          console.log(`Client unsubscribed from reference: ${ws.reference}`);
         }
       }
     });
 
     ws.on('error', (error) => {
       console.error('WebSocket error:', error);
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({
+          type: 'error',
+          message: 'Internal server error'
+        }));
+      }
     });
+
+    // Send initial connection success message
+    ws.send(JSON.stringify({
+      type: 'connected',
+      message: 'Successfully connected to payment server'
+    }));
   });
 
   const broadcastPaymentUpdate = (reference: string, status: 'success' | 'failed') => {
@@ -52,13 +72,17 @@ export const setupWebSocketServer = (server: Server) => {
         type: 'payment_status',
         reference,
         status,
+        timestamp: new Date().toISOString()
       });
 
+      let activeClients = 0;
       clientSet.forEach((client) => {
         if (client.readyState === WebSocket.OPEN) {
           client.send(message);
+          activeClients++;
         }
       });
+      console.log(`Payment status broadcast to ${activeClients} clients for reference: ${reference}`);
     }
   };
 
