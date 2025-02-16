@@ -2,14 +2,13 @@ import { pgTable, text, serial, integer, timestamp, boolean, decimal } from "dri
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-// Enhanced UPI IDs table with platform fee
+// UPI IDs table without platform fee
 export const upiIds = pgTable("upi_ids", {
   id: serial("id").primaryKey(),
   upiId: text("upi_id").notNull().unique(),
   merchantName: text("merchant_name").notNull(),
   merchantCategory: text("merchant_category").default('general').notNull(),
   businessType: text("business_type").default('retail').notNull(),
-  platformFeePercentage: decimal("platform_fee_percentage", { precision: 5, scale: 2 }).default("0.50").notNull(),
   dailyLimit: decimal("daily_limit", { precision: 10, scale: 2 }).default("50000.00").notNull(),
   isActive: boolean("is_active").default(true).notNull(),
   blockedAt: timestamp("blocked_at"),
@@ -18,14 +17,13 @@ export const upiIds = pgTable("upi_ids", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-// Enhanced transactions table with fee tracking
+// Transactions table without platform fee
 export const transactions = pgTable("transactions", {
   id: serial("id").primaryKey(),
   amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
-  platformFee: decimal("platform_fee", { precision: 10, scale: 2 }).notNull(),
   upiId: text("upi_id").notNull(),
   merchantName: text("merchant_name").notNull(),
-  reference: text("reference").notNull(),
+  reference: text("reference").notNull().unique(),
   status: text("status").notNull().default("pending"),
   customerName: text("customer_name"),
   customerPhone: text("customer_phone"),
@@ -36,14 +34,6 @@ export const transactions = pgTable("transactions", {
   completedAt: timestamp("completed_at"),
   failedAt: timestamp("failed_at"),
   retryCount: integer("retry_count").default(0),
-});
-
-// Platform earnings tracking
-export const platformEarnings = pgTable("platform_earnings", {
-  id: serial("id").primaryKey(),
-  transactionId: integer("transaction_id").notNull(),
-  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
-  timestamp: timestamp("timestamp").defaultNow().notNull(),
 });
 
 // Enhanced validation for UPI ID format
@@ -70,10 +60,6 @@ export const insertUpiSchema = createInsertSchema(upiIds)
       .optional(),
     businessType: z.enum(['retail', 'online', 'wholesale', 'service'])
       .optional(),
-    platformFeePercentage: z.number()
-      .min(0, "Platform fee cannot be negative")
-      .max(5, "Platform fee cannot exceed 5%")
-      .optional(),
     dailyLimit: z.number()
       .min(0, "Daily limit cannot be negative")
       .max(1000000, "Daily limit cannot exceed 10,00,000")
@@ -82,8 +68,7 @@ export const insertUpiSchema = createInsertSchema(upiIds)
 
 export const insertTransactionSchema = createInsertSchema(transactions)
   .omit({ 
-    id: true, 
-    platformFee: true,
+    id: true,
     timestamp: true, 
     completedAt: true, 
     failedAt: true, 
@@ -114,8 +99,6 @@ export type UpiId = typeof upiIds.$inferSelect;
 export type InsertUpi = z.infer<typeof insertUpiSchema>;
 export type Transaction = typeof transactions.$inferSelect;
 export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
-export type UpiAuditLog = typeof upiAuditLogs.$inferSelect;
-export type PlatformEarning = typeof platformEarnings.$inferSelect;
 
 export const ADMIN_PIN = "123456";
 
@@ -130,3 +113,5 @@ export const upiAuditLogs = pgTable("upi_audit_logs", {
   actionBy: text("action_by"),
   ipAddress: text("ip_address"),
 });
+
+export type UpiAuditLog = typeof upiAuditLogs.$inferSelect;

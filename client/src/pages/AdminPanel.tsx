@@ -10,8 +10,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Link } from "wouter";
 import {
   ArrowLeft, Power, Ban, Unlock, History, Trash2, RefreshCw,
-  AlertTriangle, Users, Shield, Search, TrendingUp, ArrowUpRight,
-  Percent, DollarSign
+  AlertTriangle, Users, Shield, Search, TrendingUp, ArrowUpRight
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -24,8 +23,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Badge } from "@/components/ui/badge"; // Added import for Badge component
-
+import { Badge } from "@/components/ui/badge";
 
 export default function AdminPanel() {
   const { toast } = useToast();
@@ -36,7 +34,6 @@ export default function AdminPanel() {
     queryKey: ["/api/upi"],
   });
 
-  // Filter UPIs based on search term
   const filteredUpiIds = upiIds?.filter(upi => {
     const searchLower = searchTerm.toLowerCase();
     return (
@@ -50,21 +47,9 @@ export default function AdminPanel() {
     active: upiIds?.filter(u => u.isActive && !u.deletedAt).length || 0,
     blocked: upiIds?.filter(u => u.blockedAt).length || 0,
     total: upiIds?.length || 0,
-    pending: upiIds?.filter(u => !u.blockedAt && !u.deletedAt && !u.isActive).length || 0,
-    totalEarnings: 0 // Initialize totalEarnings
+    pending: upiIds?.filter(u => !u.blockedAt && !u.deletedAt && !u.isActive).length || 0
   };
 
-  // Assuming you have a transactions query or data available
-  const { data: transactions } = useQuery<{upiId: string, platformFee: number}[]>({
-    queryKey: ['/api/transactions'], // Replace with your actual query key
-  });
-
-  if (upiIds && transactions) {
-    stats.totalEarnings = upiIds.reduce((acc, upi) => {
-      const transactionsForUpi = transactions.filter(t => t.upiId === upi.upiId);
-      return acc + transactionsForUpi.reduce((sum, t) => sum + (t.platformFee || 0), 0);
-    }, 0);
-  }
 
   const toggleUpiId = async (id: number) => {
     try {
@@ -136,23 +121,6 @@ export default function AdminPanel() {
     }
   };
 
-  const updatePlatformFee = async (id: number, fee: number) => {
-    try {
-      await apiRequest("POST", `/api/upi/${id}/update-fee`, { fee });
-      queryClient.invalidateQueries({ queryKey: ["/api/upi"] });
-      toast({
-        title: "Success",
-        description: "Platform fee updated successfully",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to update platform fee",
-        variant: "destructive",
-      });
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-950 to-gray-900 p-4">
       <div className="max-w-6xl mx-auto">
@@ -185,7 +153,7 @@ export default function AdminPanel() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 mb-8"
+          className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-8"
         >
           <Card className="p-4 backdrop-blur-lg bg-white/10 border-red-500/20 hover:bg-white/20 transition-colors">
             <div className="flex items-center gap-3">
@@ -234,21 +202,6 @@ export default function AdminPanel() {
               <div>
                 <p className="text-sm text-gray-400">Total UPIs</p>
                 <p className="text-2xl font-bold text-red-400">{stats.total}</p>
-              </div>
-            </div>
-          </Card>
-
-          <Card className="p-4 backdrop-blur-lg bg-white/10 border-red-500/20 hover:bg-white/20 transition-colors">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-red-500/10 rounded-lg">
-                <DollarSign className="h-8 w-8 text-green-400" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-400">Platform Earnings</p>
-                <div className="flex items-center gap-2">
-                  <p className="text-2xl font-bold text-green-400">₹{stats.totalEarnings.toFixed(2)}</p>
-                  <ArrowUpRight className="h-4 w-4 text-green-400" />
-                </div>
               </div>
             </div>
           </Card>
@@ -350,36 +303,6 @@ export default function AdminPanel() {
                               Deleted on {new Date(upi.deletedAt).toLocaleDateString()}
                             </p>
                           )}
-
-                          {/* Platform Fee Section */}
-                          <div className="mt-3 p-3 bg-white/5 rounded-lg">
-                            <div className="flex items-center justify-between mb-2">
-                              <span className="text-sm text-gray-400">Platform Fee</span>
-                              <Badge variant="outline" className="bg-green-500/10 text-green-400">
-                                {(upi.platformFeePercentage || 0).toFixed(1)}%
-                              </Badge>
-                            </div>
-                            <div className="flex gap-2">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="flex-1 border-red-500/20 text-red-400 hover:bg-red-500/10"
-                                onClick={() => updatePlatformFee(upi.id, Math.max(0, (upi.platformFeePercentage || 0) - 0.1))}
-                                disabled={!upi.platformFeePercentage || upi.platformFeePercentage <= 0}
-                              >
-                                -
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="flex-1 border-red-500/20 text-red-400 hover:bg-red-500/10"
-                                onClick={() => updatePlatformFee(upi.id, Math.min(5, (upi.platformFeePercentage || 0) + 0.1))}
-                                disabled={upi.platformFeePercentage >= 5}
-                              >
-                                +
-                              </Button>
-                            </div>
-                          </div>
                         </div>
                         <div className="flex gap-2 justify-end">
                           <Button
