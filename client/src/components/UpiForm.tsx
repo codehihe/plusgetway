@@ -1,7 +1,9 @@
+
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertUpiSchema } from "@shared/schema";
 import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -15,6 +17,10 @@ export default function UpiForm() {
     defaultValues: {
       upiId: "",
       merchantName: "",
+      storeName: "",
+      merchantCategory: "general",
+      businessType: "retail",
+      dailyLimit: 50000
     },
   });
 
@@ -53,13 +59,40 @@ export default function UpiForm() {
       
       <div>
         <Input
-          placeholder="UPI ID"
+          placeholder="Store Name"
+          {...form.register("storeName")}
+          className="bg-white/5 border-red-500/20 text-white"
+        />
+        {form.formState.errors.storeName && (
+          <p className="text-sm text-red-400 mt-1">
+            {form.formState.errors.storeName.message}
+          </p>
+        )}
+      </div>
+
+      <div>
+        <Input
+          placeholder="UPI ID (e.g. name@upi)"
           {...form.register("upiId")}
           className="bg-white/5 border-red-500/20 text-white"
         />
         {form.formState.errors.upiId && (
           <p className="text-sm text-red-400 mt-1">
             {form.formState.errors.upiId.message}
+          </p>
+        )}
+      </div>
+
+      <div>
+        <Input
+          type="number"
+          placeholder="Daily Limit"
+          {...form.register("dailyLimit", { valueAsNumber: true })}
+          className="bg-white/5 border-red-500/20 text-white"
+        />
+        {form.formState.errors.dailyLimit && (
+          <p className="text-sm text-red-400 mt-1">
+            {form.formState.errors.dailyLimit.message}
           </p>
         )}
       </div>
