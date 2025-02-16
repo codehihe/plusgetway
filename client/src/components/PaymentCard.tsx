@@ -35,6 +35,11 @@ const generateUpiLink = (upi: UpiId, amount: string, reference: string) => {
       return null;
     }
 
+    if (upi.blockedAt || upi.deletedAt || !upi.isActive) {
+      console.error("UPI ID is not active");
+      return null;
+    }
+
     const parsedAmount = parseFloat(amount);
     if (isNaN(parsedAmount) || parsedAmount <= 0) {
       console.error("Invalid amount for UPI link generation");
@@ -271,21 +276,56 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
 
   const onSubmit = async (data: PaymentFormData) => {
     try {
+      // Check UPI status before initiating transaction
+      if (upi.blockedAt) {
+        toast({
+          title: "Error",
+          description: "This UPI ID is currently blocked.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (upi.deletedAt) {
+        toast({
+          title: "Error",
+          description: "This UPI ID is no longer active.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (!upi.isActive) {
+        toast({
+          title: "Error",
+          description: "This UPI ID is currently inactive.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const res = await apiRequest("POST", "/api/transactions", {
         amount: data.amount,
         upiId: upi.upiId,
         merchantName: upi.merchantName,
         status: "pending",
       });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "Failed to create transaction");
+      }
+
       const tx = await res.json();
       setReference(tx.reference);
       setTimeLeft(PAYMENT_TIMEOUT);
       setPaymentStatus("pending");
       setShowQR(true);
     } catch (error) {
+      console.error("Payment initiation error:", error);
       toast({
         title: "Error",
-        description: "Unable to initiate payment. Please try again.",
+        description: error instanceof Error ? error.message : "Unable to initiate payment. Please try again.",
         variant: "destructive",
       });
     }
