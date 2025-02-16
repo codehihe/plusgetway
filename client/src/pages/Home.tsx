@@ -111,6 +111,46 @@ export default function Home() {
             </div>
           </motion.div>
 
+          {/* Payment Card Section */}
+          <div className="max-w-4xl mx-auto mb-12">
+            <AnimatePresence mode="wait">
+              {isLoading ? (
+                <motion.div
+                  key="loading"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                >
+                  <Card className="p-8 backdrop-blur-lg bg-white/10 border-red-500/20">
+                    <div className="flex flex-col items-center space-y-4">
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                      >
+                        <div className="w-8 h-8 border-2 border-red-500 border-t-transparent rounded-full" />
+                      </motion.div>
+                      <p className="text-gray-400">Loading payment options...</p>
+                    </div>
+                  </Card>
+                </motion.div>
+              ) : activeUpiIds.length > 0 ? (
+                <motion.div
+                  variants={container}
+                  initial="hidden"
+                  animate="show"
+                  className="relative"
+                >
+                  <div className="absolute inset-y-0 left-0 w-2 bg-gradient-to-b from-red-500 via-purple-500 to-red-500 animate-gradient rounded-l-lg"></div>
+                  {activeUpiIds.map(upi => (
+                    <motion.div key={upi.id} variants={item}>
+                      <PaymentCard upi={upi} />
+                    </motion.div>
+                  ))}
+                </motion.div>
+              ) : null}
+            </AnimatePresence>
+          </div>
+
           {/* Payment Apps Section */}
           <motion.div 
             className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto mb-12"
