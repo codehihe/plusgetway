@@ -6,7 +6,11 @@ interface WebSocketClient extends WebSocket {
 }
 
 export const setupWebSocketServer = (server: Server) => {
-  const wss = new WebSocketServer({ server, path: '/ws' });
+  const wss = new WebSocketServer({ 
+  server,
+  path: '/ws',
+  clientTracking: true 
+});
   const clients = new Map<string, Set<WebSocketClient>>();
 
   wss.on('connection', (ws: WebSocketClient) => {
