@@ -19,7 +19,6 @@ import { getWebSocketUrl } from "@/lib/utils";
 
 const PAYMENT_TIMEOUT = 180; // 3 minutes in seconds
 
-// Update payment schema to enforce minimum amount
 const paymentSchema = z.object({
   amount: z.string()
     .min(1, "Amount is required")
@@ -47,7 +46,6 @@ const generateUpiLink = (upi: UpiId, amount: string, reference: string) => {
     const cleanMerchantName = encodeURIComponent(upi.merchantName.trim());
     const cleanReference = encodeURIComponent(reference.trim());
 
-    // Standardized UPI link format for better compatibility
     const params = new URLSearchParams({
       pa: upi.upiId.trim(),
       pn: cleanMerchantName,
@@ -96,7 +94,6 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
     },
   });
 
-  // WebSocket connection setup
   const setupWebSocket = useCallback(() => {
     if (!reference) return;
 
@@ -160,7 +157,6 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
       ws.onclose = () => {
         console.log('WebSocket connection closed');
         setWsConnected(false);
-        // Attempt to reconnect after a delay
         setTimeout(() => {
           if (timeLeft > 0) {
             setupWebSocket();
@@ -184,7 +180,6 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
     }
   }, [reference, toast, form, timeLeft]);
 
-  // Fallback polling mechanism
   useEffect(() => {
     let timer: NodeJS.Timeout | null = null;
     let statusCheck: NodeJS.Timeout | null = null;
@@ -258,7 +253,6 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
     };
   }, [showQR, timeLeft, reference, toast, form, wsConnected]);
 
-  // Initialize WebSocket connection
   useEffect(() => {
     if (showQR && reference) {
       const cleanup = setupWebSocket();
@@ -299,7 +293,6 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
 
   const onSubmit = async (data: PaymentFormData) => {
     try {
-      // Additional validation for minimum amount
       const amount = parseFloat(data.amount);
       if (amount < 1) {
         toast({
@@ -310,7 +303,6 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
         return;
       }
 
-      // Enhanced validation before transaction
       if (upi.blockedAt) {
         setPaymentStatus("failed");
         toast({
@@ -407,25 +399,25 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
         exit={{ scale: 0.9, opacity: 0 }}
         whileHover={{ scale: 1.02 }}
         transition={{ type: "spring", stiffness: 300, damping: 25 }}
-        className="transform-gpu"
+        className="transform-gpu max-w-xl mx-auto"
       >
-        <Card className="overflow-hidden backdrop-blur-lg bg-gradient-to-br from-red-950/90 to-gray-900/90 border-red-500/20 mb-4 shadow-xl hover:shadow-red-500/10 transition-all duration-300">
-          <div className="p-6 border-b border-red-500/20">
+        <Card className="overflow-hidden backdrop-blur-lg bg-gradient-to-br from-red-950/90 to-gray-900/90 border-red-500/20 mb-4 shadow-2xl hover:shadow-red-500/10 transition-all duration-300 rounded-xl">
+          <div className="p-6 border-b border-red-500/20 bg-gradient-to-r from-red-950/50 to-gray-900/50">
             <motion.div
               initial={{ x: -20 }}
               animate={{ x: 0 }}
               className="flex items-center justify-between"
             >
               <div>
-                <h2 className="text-xl font-semibold text-red-400 flex items-center gap-2">
-                  <IndianRupee className="w-5 h-5" />
+                <h2 className="text-2xl font-bold text-red-400 flex items-center gap-2">
+                  <IndianRupee className="w-6 h-6" />
                   <span>{upi.merchantName}</span>
                   <Badge variant="secondary" className="ml-2 bg-red-500/20 text-red-300">
                     Verified
                   </Badge>
                 </h2>
                 <motion.p
-                  className="text-sm mt-1 bg-gradient-to-r from-red-400 via-orange-400 to-yellow-400 bg-clip-text text-transparent font-medium animate-gradient"
+                  className="text-lg mt-2 bg-gradient-to-r from-red-400 via-orange-400 to-yellow-400 bg-clip-text text-transparent font-medium animate-gradient"
                   style={{
                     backgroundSize: '200% auto',
                     animation: 'gradient 3s linear infinite'
@@ -436,13 +428,15 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
                   </span>
                 </motion.p>
               </div>
-              <QrCode className="w-6 h-6 text-red-400" />
+              <div className="bg-red-500/10 p-3 rounded-full">
+                <QrCode className="w-8 h-8 text-red-400" />
+              </div>
             </motion.div>
           </div>
 
-          <div className="p-6">
+          <div className="p-8">
             {!showQR ? (
-              <motion.div className="space-y-6">
+              <motion.div className="space-y-8">
                 <motion.form
                   onSubmit={form.handleSubmit(onSubmit)}
                   className="space-y-6"
@@ -450,11 +444,11 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2 }}
                 >
-                  <div className="space-y-2">
-                    <label className="text-sm text-gray-400">Enter Amount</label>
+                  <div className="space-y-3">
+                    <label className="text-lg font-medium text-red-400">Enter Amount</label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                        <IndianRupee className="h-4 w-4 text-gray-400" />
+                        <IndianRupee className="h-5 w-5 text-red-400" />
                       </div>
                       <Input
                         type="number"
@@ -463,7 +457,7 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
                         min="0.01"
                         max="100000"
                         {...form.register("amount")}
-                        className="pl-9 bg-white/5 border-red-500/20 text-white focus:ring-red-500/30 transition-all duration-300 text-lg font-medium"
+                        className="pl-10 bg-white/5 border-red-500/20 text-white focus:ring-red-500/30 transition-all duration-300 text-xl font-medium h-14"
                       />
                     </div>
                     {form.formState.errors.amount && (
@@ -476,75 +470,81 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
                       </motion.p>
                     )}
                   </div>
+                  <div className="grid grid-cols-3 gap-6">
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    className="flex flex-col items-center p-4 bg-white/5 rounded-lg border border-red-500/10 hover:border-red-500/20 transition-all duration-300"
+                  >
+                    <Shield className="w-8 h-8 text-green-400 mb-2" />
+                    <span className="text-sm font-medium text-gray-300">Secure</span>
+                  </motion.div>
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    className="flex flex-col items-center p-4 bg-white/5 rounded-lg border border-red-500/10 hover:border-red-500/20 transition-all duration-300"
+                  >
+                    <Clock className="w-8 h-8 text-blue-400 mb-2" />
+                    <span className="text-sm font-medium text-gray-300">Instant</span>
+                  </motion.div>
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    className="flex flex-col items-center p-4 bg-white/5 rounded-lg border border-red-500/10 hover:border-red-500/20 transition-all duration-300"
+                  >
+                    <Smartphone className="w-8 h-8 text-purple-400 mb-2" />
+                    <span className="text-sm font-medium text-gray-300">Mobile</span>
+                  </motion.div>
+                </div>
+                  <Button
+                    type="submit"
+                    onClick={form.handleSubmit(onSubmit)}
+                    className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 transform hover:scale-[1.02] transition-all duration-300"
+                  >
+                    <ShoppingCart className="w-4 h-4 mr-2" />
+                    Proceed to Pay
+                  </Button>
+
+                  <div className="space-y-3 bg-white/5 p-4 rounded-lg">
+                    <p className="text-sm font-medium text-gray-400">Transaction Details</p>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-400">Transaction Limit</span>
+                      <span className="text-white">₹1,00,000</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-400">Processing Fee</span>
+                      <span className="text-green-400">Free</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-400">Settlement Time</span>
+                      <span className="text-white">Instant</span>
+                    </div>
+                  </div>
+
+                  <div className="py-4">
+                    <p className="text-sm text-gray-400 mb-3">Supported Payment Apps</p>
+                    <div className="grid grid-cols-3 gap-4 bg-white/5 p-4 rounded-lg">
+                      <motion.div
+                        whileHover={{ scale: 1.1 }}
+                        className="flex flex-col items-center gap-2"
+                      >
+                        <SiGooglepay className="w-12 h-12 text-white/80 hover:text-white transition-colors" />
+                        <span className="text-xs text-gray-400">Google Pay</span>
+                      </motion.div>
+                      <motion.div
+                        whileHover={{ scale: 1.1 }}
+                        className="flex flex-col items-center gap-2"
+                      >
+                        <SiPhonepe className="w-12 h-12 text-white/80 hover:text-white transition-colors" />
+                        <span className="text-xs text-gray-400">PhonePe</span>
+                      </motion.div>
+                      <motion.div
+                        whileHover={{ scale: 1.1 }}
+                        className="flex flex-col items-center gap-2"
+                      >
+                        <SiPaytm className="w-12 h-12 text-white/80 hover:text-white transition-colors" />
+                        <span className="text-xs text-gray-400">Paytm</span>
+                      </motion.div>
+                    </div>
+                  </div>
                 </motion.form>
-
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="flex flex-col items-center p-3 bg-white/5 rounded-lg">
-                    <Shield className="w-6 h-6 text-green-400 mb-2" />
-                    <span className="text-xs text-gray-400 text-center">Secure</span>
-                  </div>
-                  <div className="flex flex-col items-center p-3 bg-white/5 rounded-lg">
-                    <Clock className="w-6 h-6 text-blue-400 mb-2" />
-                    <span className="text-xs text-gray-400 text-center">Instant</span>
-                  </div>
-                  <div className="flex flex-col items-center p-3 bg-white/5 rounded-lg">
-                    <Smartphone className="w-6 h-6 text-purple-400 mb-2" />
-                    <span className="text-xs text-gray-400 text-center">Mobile</span>
-                  </div>
-                </div>
-
-                {/* Proceed to Pay button moved here, above transaction details */}
-                <Button
-                  type="submit"
-                  onClick={form.handleSubmit(onSubmit)}
-                  className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 transform hover:scale-[1.02] transition-all duration-300"
-                >
-                  <ShoppingCart className="w-4 h-4 mr-2" />
-                  Proceed to Pay
-                </Button>
-
-                <div className="space-y-3 bg-white/5 p-4 rounded-lg">
-                  <p className="text-sm font-medium text-gray-400">Transaction Details</p>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-400">Transaction Limit</span>
-                    <span className="text-white">₹1,00,000</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-400">Processing Fee</span>
-                    <span className="text-green-400">Free</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-400">Settlement Time</span>
-                    <span className="text-white">Instant</span>
-                  </div>
-                </div>
-
-                <div className="py-4">
-                  <p className="text-sm text-gray-400 mb-3">Supported Payment Apps</p>
-                  <div className="grid grid-cols-3 gap-4 bg-white/5 p-4 rounded-lg">
-                    <motion.div
-                      whileHover={{ scale: 1.1 }}
-                      className="flex flex-col items-center gap-2"
-                    >
-                      <SiGooglepay className="w-12 h-12 text-white/80 hover:text-white transition-colors" />
-                      <span className="text-xs text-gray-400">Google Pay</span>
-                    </motion.div>
-                    <motion.div
-                      whileHover={{ scale: 1.1 }}
-                      className="flex flex-col items-center gap-2"
-                    >
-                      <SiPhonepe className="w-12 h-12 text-white/80 hover:text-white transition-colors" />
-                      <span className="text-xs text-gray-400">PhonePe</span>
-                    </motion.div>
-                    <motion.div
-                      whileHover={{ scale: 1.1 }}
-                      className="flex flex-col items-center gap-2"
-                    >
-                      <SiPaytm className="w-12 h-12 text-white/80 hover:text-white transition-colors" />
-                      <span className="text-xs text-gray-400">Paytm</span>
-                    </motion.div>
-                  </div>
-                </div>
               </motion.div>
             ) : (
               <motion.div
