@@ -2,7 +2,7 @@ import { pgTable, text, serial, integer, timestamp, boolean, decimal } from "dri
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-// UPI IDs table without platform fee
+// UPI IDs table
 export const upiIds = pgTable("upi_ids", {
   id: serial("id").primaryKey(),
   upiId: text("upi_id").notNull().unique(),
@@ -17,7 +17,7 @@ export const upiIds = pgTable("upi_ids", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-// Transactions table without platform fee
+// Transactions table
 export const transactions = pgTable("transactions", {
   id: serial("id").primaryKey(),
   amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),

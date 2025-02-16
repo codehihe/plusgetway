@@ -65,6 +65,8 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
   const [timeLeft, setTimeLeft] = useState(PAYMENT_TIMEOUT);
   const [paymentStatus, setPaymentStatus] = useState<"pending" | "success" | "failed">("pending");
   const { toast } = useToast();
+  const [animatedText, setAnimatedText] = useState("");
+  const [animationIndex, setAnimationIndex] = useState(0);
 
   const form = useForm<PaymentFormData>({
     resolver: zodResolver(paymentSchema),
@@ -125,6 +127,23 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
       });
     }
   }, [timeLeft, toast]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const text = upi.merchantName;
+      if (animationIndex < text.length) {
+        setAnimatedText((prev) => prev + text[animationIndex]);
+        setAnimationIndex(prev => prev + 1);
+      } else {
+        setTimeout(() => {
+          setAnimatedText("");
+          setAnimationIndex(0);
+        }, 2000); // Wait 2 seconds before restarting animation
+      }
+    }, 100); // Speed of typing animation
+
+    return () => clearInterval(interval);
+  }, [animationIndex, upi.merchantName]);
 
   const onSubmit = async (data: PaymentFormData) => {
     try {
@@ -206,7 +225,6 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
         className="transform-gpu"
       >
         <Card className="overflow-hidden backdrop-blur-lg bg-gradient-to-br from-red-950/90 to-gray-900/90 border-red-500/20 mb-4 shadow-xl hover:shadow-red-500/10 transition-all duration-300">
-          {/* Header Section */}
           <div className="p-6 border-b border-red-500/20">
             <motion.div
               initial={{ x: -20 }}
@@ -214,14 +232,17 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
               className="flex items-center justify-between"
             >
               <div>
-                <h2 className="text-xl font-semibold text-red-400 flex items-center gap-2">
+                <motion.h2
+                  className="text-xl font-semibold text-red-400 flex items-center gap-2"
+                  key={animatedText}
+                >
                   <IndianRupee className="w-5 h-5" />
-                  <span>{upi.merchantName}</span>
+                  <span className="font-mono">{animatedText}</span>
                   <Badge variant="secondary" className="ml-2 bg-red-500/20 text-red-300">
                     Verified
                   </Badge>
-                </h2>
-                <p className="text-sm text-gray-400 mt-1">{upi.upiId}</p>
+                </motion.h2>
+                <p className="text-sm text-gray-400 mt-1">Secure Payment Gateway</p>
               </div>
               <QrCode className="w-6 h-6 text-red-400" />
             </motion.div>
@@ -229,14 +250,13 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
 
           <div className="p-6">
             {!showQR ? (
-              <motion.form 
-                onSubmit={form.handleSubmit(onSubmit)} 
+              <motion.form
+                onSubmit={form.handleSubmit(onSubmit)}
                 className="space-y-6"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
               >
-                {/* Amount Input */}
                 <div className="space-y-2">
                   <label className="text-sm text-gray-400">Enter Amount</label>
                   <div className="relative">
@@ -254,7 +274,7 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
                     />
                   </div>
                   {form.formState.errors.amount && (
-                    <motion.p 
+                    <motion.p
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                       className="text-sm text-red-400 mt-1"
@@ -264,25 +284,24 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
                   )}
                 </div>
 
-                {/* Payment Apps Section */}
                 <div className="py-4">
                   <p className="text-sm text-gray-400 mb-3">Supported Payment Apps</p>
                   <div className="grid grid-cols-3 gap-4 bg-white/5 p-4 rounded-lg">
-                    <motion.div 
+                    <motion.div
                       whileHover={{ scale: 1.1 }}
                       className="flex flex-col items-center gap-2"
                     >
                       <SiGooglepay className="w-12 h-12 text-white/80 hover:text-white transition-colors" />
                       <span className="text-xs text-gray-400">Google Pay</span>
                     </motion.div>
-                    <motion.div 
+                    <motion.div
                       whileHover={{ scale: 1.1 }}
                       className="flex flex-col items-center gap-2"
                     >
                       <SiPhonepe className="w-12 h-12 text-white/80 hover:text-white transition-colors" />
                       <span className="text-xs text-gray-400">PhonePe</span>
                     </motion.div>
-                    <motion.div 
+                    <motion.div
                       whileHover={{ scale: 1.1 }}
                       className="flex flex-col items-center gap-2"
                     >
@@ -292,7 +311,6 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
                   </div>
                 </div>
 
-                {/* Transaction Details */}
                 <div className="space-y-3 bg-white/5 p-4 rounded-lg">
                   <p className="text-sm font-medium text-gray-400">Transaction Details</p>
                   <div className="flex justify-between text-sm">
@@ -309,9 +327,8 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
                   </div>
                 </div>
 
-                {/* Submit Button */}
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 transform hover:scale-[1.02] transition-all duration-300"
                 >
                   <ShoppingCart className="w-4 h-4 mr-2" />
@@ -319,13 +336,12 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
                 </Button>
               </motion.form>
             ) : (
-              <motion.div 
+              <motion.div
                 className="space-y-6"
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.3 }}
               >
-                {/* QR Code Section */}
                 <div className="bg-gradient-to-br from-gray-900 to-red-950 p-6 rounded-lg flex flex-col items-center relative overflow-hidden">
                   <div className="absolute inset-0 bg-grid-white/5 mask-gradient" />
 
@@ -344,7 +360,7 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
                           className="w-full h-auto"
                         />
                       </motion.div>
-                      <motion.div 
+                      <motion.div
                         className="text-center mt-6 space-y-2"
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -373,8 +389,7 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
                   )}
                 </div>
 
-                {/* Action Buttons */}
-                <motion.div 
+                <motion.div
                   className="grid grid-cols-2 gap-3"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -402,8 +417,7 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
                   </Button>
                 </motion.div>
 
-                {/* Timer Section */}
-                <motion.div 
+                <motion.div
                   className="space-y-2"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -418,20 +432,19 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
                       {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
                     </span>
                   </div>
-                  <Progress 
-                    value={(timeLeft / PAYMENT_TIMEOUT) * 100} 
+                  <Progress
+                    value={(timeLeft / PAYMENT_TIMEOUT) * 100}
                     className="h-1 bg-red-950"
                   />
                 </motion.div>
 
-                {/* Status Indicators */}
                 {paymentStatus !== "pending" && (
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     className={`p-4 rounded-lg ${
-                      paymentStatus === "success" 
-                        ? "bg-green-500/10 border border-green-500/20" 
+                      paymentStatus === "success"
+                        ? "bg-green-500/10 border border-green-500/20"
                         : "bg-red-500/10 border border-red-500/20"
                     }`}
                   >
@@ -448,8 +461,8 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
                           {paymentStatus === "success" ? "Payment Successful" : "Payment Failed"}
                         </p>
                         <p className="text-sm text-gray-400">
-                          {paymentStatus === "success" 
-                            ? "Your transaction has been completed" 
+                          {paymentStatus === "success"
+                            ? "Your transaction has been completed"
                             : "Please try again or contact support"}
                         </p>
                       </div>
@@ -457,7 +470,6 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
                   </motion.div>
                 )}
 
-                {/* Cancel Button */}
                 <Button
                   variant="outline"
                   className="w-full border-red-500/20 text-red-400 hover:bg-red-500/10 transition-all duration-300"
