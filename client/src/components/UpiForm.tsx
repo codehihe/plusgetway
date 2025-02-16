@@ -40,9 +40,13 @@ export default function UpiForm() {
         });
       }
     } catch (error: any) {
+      const errorMessage = error.message?.includes('duplicate key') 
+        ? "This UPI ID already exists"
+        : "Failed to add UPI ID";
+      
       toast({
         title: "Error",
-        description: error.message || "Failed to add UPI ID",
+        description: errorMessage,
         variant: "destructive",
       });
     }
