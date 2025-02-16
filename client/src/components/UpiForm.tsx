@@ -26,6 +26,28 @@ export default function UpiForm() {
 
   const onSubmit = async (data: InsertUpi) => {
     try {
+      const response = await apiRequest("POST", "/api/upi", {
+        ...data,
+        dailyLimit: Number(data.dailyLimit)
+      });
+      
+      if (response) {
+        queryClient.invalidateQueries({ queryKey: ["/api/upi"] });
+        form.reset();
+        toast({
+          title: "Success",
+          description: "UPI ID added successfully",
+        });
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to add UPI ID",
+        variant: "destructive",
+      });
+    }
+  };
+    try {
       await apiRequest("POST", "/api/upi", data);
       queryClient.invalidateQueries({ queryKey: ["/api/upi"] });
       form.reset();
@@ -66,6 +88,42 @@ export default function UpiForm() {
         {form.formState.errors.storeName && (
           <p className="text-sm text-red-400 mt-1">
             {form.formState.errors.storeName.message}
+          </p>
+        )}
+      </div>
+
+      <div>
+        <select
+          {...form.register("merchantCategory")}
+          className="w-full p-2 rounded bg-white/5 border border-red-500/20 text-white"
+        >
+          <option value="general">General</option>
+          <option value="food">Food</option>
+          <option value="retail">Retail</option>
+          <option value="services">Services</option>
+          <option value="education">Education</option>
+          <option value="healthcare">Healthcare</option>
+        </select>
+        {form.formState.errors.merchantCategory && (
+          <p className="text-sm text-red-400 mt-1">
+            {form.formState.errors.merchantCategory.message}
+          </p>
+        )}
+      </div>
+
+      <div>
+        <select
+          {...form.register("businessType")}
+          className="w-full p-2 rounded bg-white/5 border border-red-500/20 text-white"
+        >
+          <option value="retail">Retail</option>
+          <option value="online">Online</option>
+          <option value="wholesale">Wholesale</option>
+          <option value="service">Service</option>
+        </select>
+        {form.formState.errors.businessType && (
+          <p className="text-sm text-red-400 mt-1">
+            {form.formState.errors.businessType.message}
           </p>
         )}
       </div>
