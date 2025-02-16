@@ -47,22 +47,6 @@ export default function UpiForm() {
       });
     }
   };
-    try {
-      await apiRequest("POST", "/api/upi", data);
-      queryClient.invalidateQueries({ queryKey: ["/api/upi"] });
-      form.reset();
-      toast({
-        title: "Success",
-        description: "UPI ID added successfully",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to add UPI ID",
-        variant: "destructive",
-      });
-    }
-  };
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
