@@ -46,25 +46,50 @@ export default function Home() {
           >
             Secure UPI Payments
           </motion.h1>
-          <motion.p 
-            className="text-lg md:text-xl text-gray-400 mb-8"
+          <motion.div
+            className="space-y-4 max-w-2xl mx-auto"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
           >
-            Experience fast, secure, and hassle-free digital payments
-          </motion.p>
+            <p className="text-lg md:text-xl text-gray-400">
+              Experience fast, secure, and hassle-free digital payments
+            </p>
+            <div className="flex flex-wrap justify-center gap-4">
+              <Badge variant="outline" className="bg-red-500/10 text-red-400">
+                <Shield className="w-4 h-4 mr-1" /> Bank Grade Security
+              </Badge>
+              <Badge variant="outline" className="bg-red-500/10 text-red-400">
+                <Zap className="w-4 h-4 mr-1" /> Instant Transfers
+              </Badge>
+              <Badge variant="outline" className="bg-red-500/10 text-red-400">
+                <CheckCircle className="w-4 h-4 mr-1" /> Zero Transaction Fees
+              </Badge>
+            </div>
+          </motion.div>
 
-          {/* Payment App Logos */}
+          {/* Payment Apps Section */}
           <motion.div 
-            className="flex justify-center gap-8 mb-12"
+            className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto mb-12"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
           >
-            <SiGooglepay className="w-16 h-16 text-white/80" />
-            <SiPhonepe className="w-16 h-16 text-white/80" />
-            <SiPaytm className="w-16 h-16 text-white/80" />
+            <Card className="bg-white/5 border-red-500/20 p-6 flex flex-col items-center space-y-4">
+              <SiGooglepay className="w-16 h-16 text-white/80" />
+              <h3 className="text-lg font-medium text-red-400">Google Pay</h3>
+              <p className="text-sm text-gray-400 text-center">Quick and secure payments through Google Pay</p>
+            </Card>
+            <Card className="bg-white/5 border-red-500/20 p-6 flex flex-col items-center space-y-4">
+              <SiPhonepe className="w-16 h-16 text-white/80" />
+              <h3 className="text-lg font-medium text-red-400">PhonePe</h3>
+              <p className="text-sm text-gray-400 text-center">India's most trusted payment platform</p>
+            </Card>
+            <Card className="bg-white/5 border-red-500/20 p-6 flex flex-col items-center space-y-4">
+              <SiPaytm className="w-16 h-16 text-white/80" />
+              <h3 className="text-lg font-medium text-red-400">Paytm</h3>
+              <p className="text-sm text-gray-400 text-center">Seamless payments with Paytm wallet</p>
+            </Card>
           </motion.div>
         </div>
       </div>
@@ -208,6 +233,27 @@ export default function Home() {
               </motion.div>
             )}
           </AnimatePresence>
+        </motion.div>
+
+        {/* Statistics Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25 }}
+          className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16"
+        >
+          <Card className="bg-white/5 border-red-500/20 p-6 text-center">
+            <h3 className="text-3xl font-bold text-red-400">99.9%</h3>
+            <p className="text-gray-400 mt-2">Uptime Guarantee</p>
+          </Card>
+          <Card className="bg-white/5 border-red-500/20 p-6 text-center">
+            <h3 className="text-3xl font-bold text-red-400">10M+</h3>
+            <p className="text-gray-400 mt-2">Transactions</p>
+          </Card>
+          <Card className="bg-white/5 border-red-500/20 p-6 text-center">
+            <h3 className="text-3xl font-bold text-red-400">1M+</h3>
+            <p className="text-gray-400 mt-2">Happy Users</p>
+          </Card>
         </motion.div>
 
         {/* Trust Indicators */}
