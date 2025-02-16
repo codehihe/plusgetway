@@ -157,6 +157,51 @@ export default function Home() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Trust and Security Section */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="mt-8 p-6 backdrop-blur-lg bg-white/5 border-red-500/20 rounded-lg"
+        >
+          <h2 className="text-xl font-semibold text-red-400 mb-4">Trusted & Secure</h2>
+          <div className="space-y-4">
+            <div className="flex items-start gap-3">
+              <div className="p-2 bg-red-500/10 rounded-lg">
+                <Shield className="h-6 w-6 text-red-400" />
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-red-300">Advanced Security</h3>
+                <p className="text-xs text-gray-400 mt-1">
+                  Your transactions are protected with industry-standard encryption
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <div className="p-2 bg-red-500/10 rounded-lg">
+                <Smartphone className="h-6 w-6 text-red-400" />
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-red-300">Multiple UPI Apps</h3>
+                <p className="text-xs text-gray-400 mt-1">
+                  Compatible with all major UPI payment apps including Google Pay, PhonePe, and Paytm
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <div className="p-2 bg-red-500/10 rounded-lg">
+                <Clock className="h-6 w-6 text-red-400" />
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-red-300">24/7 Support</h3>
+                <p className="text-xs text-gray-400 mt-1">
+                  Our team is available round the clock to assist you with any payment issues
+                </p>
+              </div>
+            </div>
+          </div>
+        </motion.div>
       </div>
 
       <AdminLogin 

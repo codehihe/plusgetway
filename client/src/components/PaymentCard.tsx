@@ -10,8 +10,8 @@ import QRCode from "react-qr-code";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { motion, AnimatePresence, useAnimation } from "framer-motion";
-import { Timer, AlertTriangle, CheckCircle2, XCircle, IndianRupee, Copy, ExternalLink, 
+import { motion, AnimatePresence } from "framer-motion";
+import { Timer, AlertTriangle, CheckCircle2, XCircle, IndianRupee, Copy, ExternalLink,
   Smartphone, ShoppingCart, QrCode } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { SiGooglepay, SiPhonepe, SiPaytm } from "react-icons/si";
@@ -59,7 +59,7 @@ const generateUpiLink = (upi: UpiId, amount: string, reference: string) => {
   }
 };
 
-export default function PaymentCard({ upi }: { upi: UpiId }) {
+const PaymentCard = ({ upi }: { upi: UpiId }) => {
   const [showQR, setShowQR] = useState(false);
   const [reference, setReference] = useState("");
   const [timeLeft, setTimeLeft] = useState(PAYMENT_TIMEOUT);
@@ -218,18 +218,6 @@ export default function PaymentCard({ upi }: { upi: UpiId }) {
                     Verified
                   </Badge>
                 </h2>
-                <p className="text-sm text-gray-400 mt-1 flex items-center gap-2">
-                  {upi.upiId}
-                  <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(upi.upiId);
-                      toast({ description: "UPI ID copied to clipboard" });
-                    }}
-                    className="text-red-400 hover:text-red-300 transition-colors"
-                  >
-                    <Copy className="w-4 h-4" />
-                  </button>
-                </p>
               </div>
               <QrCode className="w-6 h-6 text-red-400" />
             </motion.div>
@@ -271,11 +259,23 @@ export default function PaymentCard({ upi }: { upi: UpiId }) {
               </div>
 
               <div className="py-4">
-                <p className="text-sm text-gray-400 mb-3">Supported Payment Apps</p>
-                <div className="flex justify-around">
-                  <SiGooglepay className="w-8 h-8 text-white/80" />
-                  <SiPhonepe className="w-8 h-8 text-white/80" />
-                  <SiPaytm className="w-8 h-8 text-white/80" />
+                <p className="text-sm text-gray-400 mb-3">Pay using any of these apps</p>
+                <div className="flex justify-around items-center bg-white/5 p-4 rounded-lg">
+                  <SiGooglepay className="w-10 h-10 text-white/80 hover:text-white transition-colors" />
+                  <SiPhonepe className="w-10 h-10 text-white/80 hover:text-white transition-colors" />
+                  <SiPaytm className="w-10 h-10 text-white/80 hover:text-white transition-colors" />
+                </div>
+              </div>
+
+              <div className="bg-white/5 p-4 rounded-lg space-y-2">
+                <p className="text-sm text-gray-400">Transaction Details</p>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-400">Transaction Limit</span>
+                  <span className="text-white">₹1,00,000</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-400">Processing Fee</span>
+                  <span className="text-green-400">Free</span>
                 </div>
               </div>
 
@@ -388,46 +388,6 @@ export default function PaymentCard({ upi }: { upi: UpiId }) {
                 </motion.div>
               </motion.div>
 
-              <motion.div 
-                className="flex justify-center items-center gap-2"
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.7 }}
-              >
-                {paymentStatus === "pending" && (
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                    className="flex items-center gap-2"
-                  >
-                    <Timer className="w-5 h-5 text-yellow-500" />
-                    <span className="text-yellow-500">Waiting for payment...</span>
-                  </motion.div>
-                )}
-                {paymentStatus === "success" && (
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: "spring" }}
-                    className="flex items-center gap-2"
-                  >
-                    <CheckCircle2 className="w-5 h-5 text-green-500" />
-                    <span className="text-green-500">Payment successful!</span>
-                  </motion.div>
-                )}
-                {paymentStatus === "failed" && (
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: "spring" }}
-                    className="flex items-center gap-2"
-                  >
-                    <XCircle className="w-5 h-5 text-red-500" />
-                    <span className="text-red-500">Payment failed</span>
-                  </motion.div>
-                )}
-              </motion.div>
-
               <Button
                 variant="outline"
                 className="w-full border-red-500/20 text-red-400 hover:bg-red-500/10 transition-all duration-300"
@@ -441,4 +401,6 @@ export default function PaymentCard({ upi }: { upi: UpiId }) {
       </motion.div>
     </AnimatePresence>
   );
-}
+};
+
+export default PaymentCard;
