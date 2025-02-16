@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Settings, AlertCircle, Shield, Smartphone, Clock, ChevronRight, CheckCircle, Lock, Zap } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { SiGooglepay, SiPhonepe, SiPaytm } from "react-icons/si";
 
 export default function Home() {
