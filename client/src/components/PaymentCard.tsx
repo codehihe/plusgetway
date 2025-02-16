@@ -364,26 +364,50 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
                 </div>
 
                 <motion.div
-                  className="grid grid-cols-2 gap-3"
+                  className="space-y-4 mb-4"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.5 }}
                 >
-                  <Button
-                    variant="outline"
-                    className="border-red-500/20 text-red-400 hover:bg-red-500/10 transition-all duration-300"
-                    onClick={() => {
-                      const amount = form.getValues("amount");
-                      const paymentLink = `upi://pay?pa=${upi.upiId}&pn=${encodeURIComponent(upi.merchantName)}&am=${amount}&cu=INR`;
-                      navigator.clipboard.writeText(paymentLink);
-                      toast({
-                        description: "Payment link copied to clipboard",
-                      });
-                    }}
-                  >
-                    <Copy className="w-4 h-4 mr-2" />
-                    Copy Link
-                  </Button>
+                  <div className="bg-white/5 p-4 rounded-lg space-y-3">
+                    <h4 className="text-red-400 font-medium">Payment Security</h4>
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div className="flex items-center gap-2 text-gray-400">
+                        <Shield className="w-4 h-4 text-green-400" />
+                        End-to-end Encrypted
+                      </div>
+                      <div className="flex items-center gap-2 text-gray-400">
+                        <Lock className="w-4 h-4 text-blue-400" />
+                        Secure Transaction
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white/5 p-4 rounded-lg space-y-3">
+                    <h4 className="text-red-400 font-medium">Transaction Details</h4>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Merchant</span>
+                        <span className="text-white">{upi.merchantName}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">UPI ID</span>
+                        <span className="text-white">{upi.upiId}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Reference</span>
+                        <span className="text-white">{reference}</span>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+
+                <motion.div
+                  className="flex justify-center"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 }}
+                >
                   <Button
                     variant="outline"
                     className="border-red-500/20 text-red-400 hover:bg-red-500/10 transition-all duration-300"
