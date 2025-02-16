@@ -4,7 +4,7 @@ import { UpiId } from "@shared/schema";
 import PaymentCard from "@/components/PaymentCard";
 import AdminLogin from "@/components/AdminLogin";
 import { Button } from "@/components/ui/button";
-import { Settings, AlertCircle } from "lucide-react";
+import { Settings, AlertCircle, Shield, Smartphone, Clock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card } from "@/components/ui/card";
 
@@ -42,7 +42,7 @@ export default function Home() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5 }}
           >
-            UPI Payment
+            Secure UPI Payment
           </motion.h1>
           <Button 
             variant="ghost" 
@@ -52,6 +52,29 @@ export default function Home() {
             <Settings className="h-5 w-5 text-red-400" />
           </Button>
         </div>
+
+        {/* New Feature Highlights Section */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8"
+        >
+          <Card className="p-4 backdrop-blur-lg bg-white/5 border-red-500/20">
+            <Shield className="h-8 w-8 text-red-400 mb-2" />
+            <h3 className="text-lg font-semibold text-red-400">Secure</h3>
+            <p className="text-sm text-gray-400">End-to-end encrypted transactions</p>
+          </Card>
+          <Card className="p-4 backdrop-blur-lg bg-white/5 border-red-500/20">
+            <Smartphone className="h-8 w-8 text-red-400 mb-2" />
+            <h3 className="text-lg font-semibold text-red-400">Convenient</h3>
+            <p className="text-sm text-gray-400">Pay using any UPI app</p>
+          </Card>
+          <Card className="p-4 backdrop-blur-lg bg-white/5 border-red-500/20">
+            <Clock className="h-8 w-8 text-red-400 mb-2" />
+            <h3 className="text-lg font-semibold text-red-400">Instant</h3>
+            <p className="text-sm text-gray-400">Real-time payment verification</p>
+          </Card>
+        </motion.div>
 
         <AnimatePresence mode="wait">
           {isLoading ? (
@@ -74,17 +97,27 @@ export default function Home() {
               </Card>
             </motion.div>
           ) : activeUpiIds.length > 0 ? (
-            <motion.div
-              variants={container}
-              initial="hidden"
-              animate="show"
-            >
-              {activeUpiIds.map(upi => (
-                <motion.div key={upi.id} variants={item}>
-                  <PaymentCard upi={upi} />
-                </motion.div>
-              ))}
-            </motion.div>
+            <>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-6"
+              >
+                <h2 className="text-xl font-semibold text-red-400 mb-2">Available Payment Methods</h2>
+                <p className="text-gray-400 text-sm">Select a payment method below to proceed with your transaction</p>
+              </motion.div>
+              <motion.div
+                variants={container}
+                initial="hidden"
+                animate="show"
+              >
+                {activeUpiIds.map(upi => (
+                  <motion.div key={upi.id} variants={item}>
+                    <PaymentCard upi={upi} />
+                  </motion.div>
+                ))}
+              </motion.div>
+            </>
           ) : (
             <motion.div
               key="no-upi"

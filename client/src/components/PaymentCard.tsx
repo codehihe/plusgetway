@@ -25,27 +25,38 @@ const paymentSchema = z.object({
 type PaymentFormData = z.infer<typeof paymentSchema>;
 
 const generateUpiLink = (upi: UpiId, amount: string, reference: string) => {
-  // Ensure proper formatting of amount and reference
-  const cleanAmount = parseFloat(amount).toFixed(2);
-  const cleanReference = reference.replace(/[^a-zA-Z0-9]/g, '');
+  try {
+    // Ensure proper formatting of amount and reference
+    const cleanAmount = parseFloat(amount).toFixed(2);
+    const cleanReference = reference.replace(/[^a-zA-Z0-9]/g, '');
 
-  // Format UPI ID and merchant name
-  const cleanUpiId = upi.upiId.trim();
-  const cleanMerchantName = encodeURIComponent(upi.merchantName.trim());
+    // Format UPI ID and merchant name
+    const cleanUpiId = upi.upiId.trim();
+    const cleanMerchantName = encodeURIComponent(upi.merchantName.trim());
 
-  // Build UPI deep link with all required parameters
-  const params = new URLSearchParams({
-    pa: cleanUpiId,
-    pn: cleanMerchantName,
-    am: cleanAmount,
-    tr: cleanReference,
-    cu: "INR",
-    tn: `Payment to ${cleanMerchantName}`,
-    mc: "0000",  // Merchant category code
-    mode: "04",  // QR code mode
-  });
+    // Validate UPI ID format
+    const upiIdRegex = /^[a-zA-Z0-9_.+-]+@[a-zA-Z][a-zA-Z0-9]+$/;
+    if (!upiIdRegex.test(cleanUpiId)) {
+      throw new Error("Invalid UPI ID format");
+    }
 
-  return `upi://pay?${params.toString()}`;
+    // Build UPI deep link with all required parameters
+    const params = new URLSearchParams({
+      pa: cleanUpiId,
+      pn: cleanMerchantName,
+      am: cleanAmount,
+      tr: cleanReference,
+      cu: "INR",
+      tn: `Payment to ${cleanMerchantName}`,
+      mc: "0000",  // Merchant category code
+      mode: "04",  // QR code mode
+    });
+
+    return `upi://pay?${params.toString()}`;
+  } catch (error) {
+    console.error("Error generating UPI link:", error);
+    return null;
+  }
 };
 
 export default function PaymentCard({ upi }: { upi: UpiId }) {
@@ -140,10 +151,18 @@ export default function PaymentCard({ upi }: { upi: UpiId }) {
   const upiLink = showQR ? generateUpiLink(upi, form.getValues("amount"), reference) : "";
 
   const copyUpiLink = () => {
-    navigator.clipboard.writeText(upiLink);
-    toast({
-      description: "Payment link copied to clipboard",
-    });
+    if (upiLink) {
+      navigator.clipboard.writeText(upiLink);
+      toast({
+        description: "Payment link copied to clipboard",
+      });
+    } else {
+      toast({
+        title: "Error",
+        description: "Unable to copy payment link. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   if (upi.blockedAt) {
@@ -220,16 +239,30 @@ export default function PaymentCard({ upi }: { upi: UpiId }) {
           ) : (
             <div className="space-y-6">
               <div className="bg-white p-6 rounded-lg flex flex-col items-center">
-                <QRCode 
-                  value={upiLink} 
-                  size={200}
-                  level="H"
-                  className="w-full h-auto"
-                />
-                <div className="text-center mt-4">
-                  <p className="text-black font-medium">Scan with any UPI app</p>
-                  <p className="text-gray-500 text-sm mt-1">Amount: ₹{parseFloat(form.getValues("amount")).toFixed(2)}</p>
-                </div>
+                {upiLink ? (
+                  <>
+                    <QRCode
+                      value={upiLink}
+                      size={200}
+                      level="H"
+                      className="w-full h-auto"
+                    />
+                    <div className="text-center mt-4">
+                      <p className="text-black font-medium">Scan with any UPI app</p>
+                      <p className="text-gray-500 text-sm mt-1">
+                        Amount: ₹{parseFloat(form.getValues("amount")).toFixed(2)}
+                      </p>
+                    </div>
+                  </>
+                ) : (
+                  <div className="text-center p-4">
+                    <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-2" />
+                    <p className="text-red-500 font-medium">Invalid UPI Configuration</p>
+                    <p className="text-gray-500 text-sm mt-1">
+                      Please contact the administrator
+                    </p>
+                  </div>
+                )}
               </div>
 
               <div className="flex gap-2">
@@ -244,7 +277,17 @@ export default function PaymentCard({ upi }: { upi: UpiId }) {
                 <Button
                   variant="outline"
                   className="flex-1 border-red-500/20 text-red-400"
-                  onClick={() => window.open(upiLink, '_blank')}
+                  onClick={() => {
+                    if (upiLink) {
+                      window.open(upiLink, '_blank');
+                    } else {
+                      toast({
+                        title: "Error",
+                        description: "Unable to generate payment link. Please try again.",
+                        variant: "destructive",
+                      });
+                    }
+                  }}
                 >
                   <Smartphone className="w-4 h-4 mr-2" />
                   Open in App
