@@ -1,5 +1,6 @@
-import { UpiId, InsertUpi, Transaction, InsertTransaction } from "@shared/schema";
-import { nanoid } from "nanoid";
+import { UpiId, InsertUpi, Transaction, InsertTransaction, upiIds, transactions } from "@shared/schema";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 
 export interface IStorage {
   getUpiIds(): Promise<UpiId[]>;
@@ -9,51 +10,50 @@ export interface IStorage {
   getTransaction(reference: string): Promise<Transaction | undefined>;
 }
 
-export class MemStorage implements IStorage {
-  private upiIds: Map<number, UpiId>;
-  private transactions: Map<string, Transaction>;
-  private currentId: number;
-
-  constructor() {
-    this.upiIds = new Map();
-    this.transactions = new Map();
-    this.currentId = 1;
-  }
-
+export class DatabaseStorage implements IStorage {
   async getUpiIds(): Promise<UpiId[]> {
-    return Array.from(this.upiIds.values());
+    return await db.select().from(upiIds);
   }
 
   async addUpiId(upi: InsertUpi): Promise<UpiId> {
-    const id = this.currentId++;
-    const upiId: UpiId = { ...upi, id, isActive: true };
-    this.upiIds.set(id, upiId);
+    const [upiId] = await db
+      .insert(upiIds)
+      .values({ ...upi, isActive: true })
+      .returning();
     return upiId;
   }
 
   async toggleUpiId(id: number): Promise<UpiId> {
-    const upi = this.upiIds.get(id);
+    const [upi] = await db.select().from(upiIds).where(eq(upiIds.id, id));
     if (!upi) throw new Error("UPI ID not found");
-    const updated = { ...upi, isActive: !upi.isActive };
-    this.upiIds.set(id, updated);
+
+    const [updated] = await db
+      .update(upiIds)
+      .set({ isActive: !upi.isActive })
+      .where(eq(upiIds.id, id))
+      .returning();
     return updated;
   }
 
   async createTransaction(tx: InsertTransaction): Promise<Transaction> {
-    const reference = nanoid();
-    const transaction: Transaction = {
-      ...tx,
-      id: this.currentId++,
-      reference,
-      timestamp: new Date(),
-    };
-    this.transactions.set(reference, transaction);
+    const [transaction] = await db
+      .insert(transactions)
+      .values({
+        ...tx,
+        status: tx.status || "pending",
+        timestamp: new Date(),
+      })
+      .returning();
     return transaction;
   }
 
   async getTransaction(reference: string): Promise<Transaction | undefined> {
-    return this.transactions.get(reference);
+    const [transaction] = await db
+      .select()
+      .from(transactions)
+      .where(eq(transactions.reference, reference));
+    return transaction;
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
