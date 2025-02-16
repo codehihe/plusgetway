@@ -372,7 +372,20 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
                   <Button
                     variant="outline"
                     className="border-red-500/20 text-red-400 hover:bg-red-500/10 transition-all duration-300"
-                    onClick={copyUpiLink}
+                    onClick={() => {
+                      if (upiLink) {
+                        navigator.clipboard.writeText(upiLink);
+                        toast({
+                          description: "Payment link copied to clipboard",
+                        });
+                      } else {
+                        toast({
+                          title: "Error",
+                          description: "Unable to copy payment link. Please try again.",
+                          variant: "destructive",
+                        });
+                      }
+                    }}
                   >
                     <Copy className="w-4 h-4 mr-2" />
                     Copy Link
@@ -459,20 +472,7 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
   );
 };
 
-const copyUpiLink = () => {
-  if (upiLink) {
-    navigator.clipboard.writeText(upiLink);
-    toast({
-      description: "Payment link copied to clipboard",
-    });
-  } else {
-    toast({
-      title: "Error",
-      description: "Unable to copy payment link. Please try again.",
-      variant: "destructive",
-    });
-  }
-};
+
 
 const formatAmount = (amount: string) => {
   return new Intl.NumberFormat("en-IN", {
