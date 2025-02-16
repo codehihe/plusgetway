@@ -5,12 +5,14 @@ import { v4 as uuidv4 } from 'uuid';
 
 export interface IStorage {
   getUpiIds(includeDeleted?: boolean): Promise<UpiId[]>;
+  getUpiIdByAddress(upiAddress: string): Promise<UpiId | undefined>;
   addUpiId(upi: InsertUpi): Promise<UpiId>;
   toggleUpiId(id: number): Promise<UpiId>;
   blockUpiId(id: number): Promise<UpiId>;
   unblockUpiId(id: number): Promise<UpiId>;
   deleteUpiId(id: number): Promise<UpiId>;
   createTransaction(tx: InsertTransaction): Promise<Transaction>;
+  updateTransactionStatus(reference: string, status: 'success' | 'failed'): Promise<Transaction>;
   getTransaction(reference: string): Promise<Transaction | undefined>;
   getTransactions(): Promise<Transaction[]>;
   getDailyTransactions(upiId: string): Promise<Transaction[]>;
@@ -26,11 +28,17 @@ export interface IStorage {
 
 export class DatabaseStorage implements IStorage {
   async getUpiIds(includeDeleted: boolean = false): Promise<UpiId[]> {
-    let query = db.select().from(upiIds);
-    if (!includeDeleted) {
-      query = query.where(isNull(upiIds.deletedAt));
-    }
-    return await query.orderBy(desc(upiIds.createdAt));
+    const query = db.select().from(upiIds)
+      .where(includeDeleted ? undefined : isNull(upiIds.deletedAt))
+      .orderBy(desc(upiIds.createdAt));
+    return await query;
+  }
+
+  async getUpiIdByAddress(upiAddress: string): Promise<UpiId | undefined> {
+    const [upi] = await db.select()
+      .from(upiIds)
+      .where(eq(upiIds.upiId, upiAddress));
+    return upi;
   }
 
   async addUpiId(upi: InsertUpi): Promise<UpiId> {
@@ -131,17 +139,41 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createTransaction(tx: InsertTransaction): Promise<Transaction> {
-    const reference = uuidv4();
     const [transaction] = await db
       .insert(transactions)
       .values({
-        ...tx,
-        reference,
+        amount: tx.amount.toString(),
+        upiId: tx.upiId,
+        merchantName: tx.merchantName,
+        reference: tx.reference || uuidv4(),
         status: tx.status || "pending",
-        timestamp: new Date(),
+        customerName: tx.customerName,
+        customerPhone: tx.customerPhone,
+        customerEmail: tx.customerEmail,
+        description: tx.description,
+        paymentApp: tx.paymentApp,
+        timestamp: new Date()
       })
       .returning();
     return transaction;
+  }
+
+  async updateTransactionStatus(reference: string, status: 'success' | 'failed'): Promise<Transaction> {
+    const now = new Date();
+    const [updated] = await db
+      .update(transactions)
+      .set({
+        status,
+        ...(status === 'success' ? { completedAt: now } : { failedAt: now })
+      })
+      .where(eq(transactions.reference, reference))
+      .returning();
+
+    if (!updated) {
+      throw new Error(`Transaction ${reference} not found`);
+    }
+
+    return updated;
   }
 
   async getTransaction(reference: string): Promise<Transaction | undefined> {

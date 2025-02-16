@@ -9,6 +9,7 @@ export async function registerRoutes(app: Express) {
   const server = createServer(app);
   const { broadcastPaymentUpdate } = setupWebSocketServer(server);
 
+  // Admin authentication
   app.post("/api/admin/login", (req, res) => {
     const { pin } = req.body;
     if (pin === ADMIN_PIN) {
@@ -18,6 +19,7 @@ export async function registerRoutes(app: Express) {
     }
   });
 
+  // UPI Management
   app.get("/api/upi", async (req, res) => {
     const upiIds = await storage.getUpiIds();
     res.json(upiIds);
@@ -58,6 +60,7 @@ export async function registerRoutes(app: Express) {
     res.json(upiId);
   });
 
+  // Transaction Management
   app.get("/api/transactions", async (req, res) => {
     const transactions = await storage.getTransactions();
     res.json(transactions);
@@ -134,6 +137,41 @@ export async function registerRoutes(app: Express) {
       console.error("Transaction fetch error:", error);
       res.status(500).json({ 
         message: "Failed to fetch transaction",
+        error: error instanceof Error ? error.message : "Unknown error"
+      });
+    }
+  });
+
+  // UPI Gateway Webhook Handler
+  app.post("/api/webhook/upi-status", async (req, res) => {
+    try {
+      const { reference, status, signature } = req.body;
+
+      // TODO: Verify webhook signature with UPI gateway's public key
+      // This should be implemented based on your UPI gateway provider's specifications
+
+      if (!reference || !status) {
+        res.status(400).json({ message: "Missing required fields" });
+        return;
+      }
+
+      // Validate status
+      if (!['success', 'failed'].includes(status)) {
+        res.status(400).json({ message: "Invalid status" });
+        return;
+      }
+
+      // Update transaction status
+      const transaction = await storage.updateTransactionStatus(reference, status);
+
+      // Broadcast status update via WebSocket
+      broadcastPaymentUpdate(reference, status);
+
+      res.json({ success: true, transaction });
+    } catch (error) {
+      console.error("Webhook processing error:", error);
+      res.status(500).json({ 
+        message: "Failed to process webhook",
         error: error instanceof Error ? error.message : "Unknown error"
       });
     }
