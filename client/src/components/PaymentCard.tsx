@@ -381,9 +381,8 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
                     variant="outline"
                     className="border-red-500/20 text-red-400 hover:bg-red-500/10 transition-all duration-300"
                     onClick={() => {
-                      if (upiLink) {
-                        window.open(upiLink, '_blank');
-                      }
+                      const link = `upi://pay?pa=${upi.upiId}&pn=${encodeURIComponent(upi.merchantName)}`;
+                      window.open(link, '_blank');
                     }}
                   >
                     <ExternalLink className="w-4 h-4 mr-2" />
