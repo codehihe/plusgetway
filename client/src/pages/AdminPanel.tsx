@@ -140,7 +140,7 @@ export default function AdminPanel() {
               <div>
                 <p className="text-sm text-gray-400">Active UPIs</p>
                 <p className="text-2xl font-bold text-red-400">
-                  {upiIds?.filter(u => u.isActive).length || 0}
+                  {upiIds?.filter(u => u.isActive && !u.deletedAt).length || 0}
                 </p>
               </div>
             </div>
@@ -239,7 +239,11 @@ export default function AdminPanel() {
                       exit={{ scale: 0.9, opacity: 0 }}
                       transition={{ type: "spring", stiffness: 300, damping: 25 }}
                       className={`rounded-lg overflow-hidden ${
-                        upi.blockedAt ? 'bg-red-950/30' : 'bg-white/5'
+                        upi.deletedAt 
+                          ? 'bg-gray-950/30 opacity-50' 
+                          : upi.blockedAt 
+                            ? 'bg-red-950/30' 
+                            : 'bg-white/5'
                       }`}
                     >
                       <div className="p-4">
@@ -251,13 +255,18 @@ export default function AdminPanel() {
                               Blocked on {new Date(upi.blockedAt).toLocaleDateString()}
                             </p>
                           )}
+                          {upi.deletedAt && (
+                            <p className="text-xs text-gray-500 mt-1">
+                              Deleted on {new Date(upi.deletedAt).toLocaleDateString()}
+                            </p>
+                          )}
                         </div>
                         <div className="flex gap-2 justify-end">
                           <Button
                             variant={upi.isActive ? "destructive" : "default"}
                             size="icon"
                             onClick={() => toggleUpiId(upi.id)}
-                            disabled={upi.blockedAt !== null}
+                            disabled={upi.blockedAt !== null || upi.deletedAt !== null}
                             className="hover:scale-105 transition-transform"
                           >
                             <Power className="h-4 w-4" />
@@ -267,6 +276,7 @@ export default function AdminPanel() {
                               variant="destructive"
                               size="icon"
                               onClick={() => blockUpiId(upi.id)}
+                              disabled={upi.deletedAt !== null}
                               className="hover:scale-105 transition-transform"
                             >
                               <Ban className="h-4 w-4" />
@@ -276,6 +286,7 @@ export default function AdminPanel() {
                               variant="default"
                               size="icon"
                               onClick={() => unblockUpiId(upi.id)}
+                              disabled={upi.deletedAt !== null}
                               className="hover:scale-105 transition-transform"
                             >
                               <Unlock className="h-4 w-4" />
@@ -285,6 +296,7 @@ export default function AdminPanel() {
                             variant="destructive"
                             size="icon"
                             onClick={() => setDeleteId(upi.id)}
+                            disabled={upi.deletedAt !== null}
                             className="hover:scale-105 transition-transform"
                           >
                             <Trash2 className="h-4 w-4" />
@@ -305,7 +317,7 @@ export default function AdminPanel() {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the UPI ID.
+              This action cannot be undone. The UPI ID will be hidden from users but remain visible in the admin panel.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -8,6 +8,7 @@ export const upiIds = pgTable("upi_ids", {
   merchantName: text("merchant_name").notNull(),
   isActive: boolean("is_active").default(true).notNull(),
   blockedAt: timestamp("blocked_at"),
+  deletedAt: timestamp("deleted_at"),
 });
 
 export const transactions = pgTable("transactions", {
@@ -25,7 +26,7 @@ export const transactions = pgTable("transactions", {
 const upiIdRegex = /^[a-zA-Z0-9_.+-]+@[a-zA-Z][a-zA-Z0-9]+$/;
 
 export const insertUpiSchema = createInsertSchema(upiIds)
-  .omit({ id: true, isActive: true, blockedAt: true })
+  .omit({ id: true, isActive: true, blockedAt: true, deletedAt: true })
   .extend({
     upiId: z.string()
       .min(5, "UPI ID must be at least 5 characters")

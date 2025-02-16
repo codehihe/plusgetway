@@ -15,7 +15,7 @@ export default function Home() {
     queryKey: ["/api/upi"],
   });
 
-  const activeUpiIds = upiIds?.filter(upi => upi.isActive) || [];
+  const activeUpiIds = upiIds?.filter(upi => upi.isActive && !upi.deletedAt) || [];
 
   const container = {
     hidden: { opacity: 0 },
@@ -53,7 +53,7 @@ export default function Home() {
           </Button>
         </div>
 
-        {/* New Feature Highlights Section */}
+        {/* Feature Highlights Section */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

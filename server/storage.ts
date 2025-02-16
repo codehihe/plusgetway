@@ -1,22 +1,27 @@
 import { UpiId, InsertUpi, Transaction, InsertTransaction, upiIds, transactions } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, isNull } from "drizzle-orm";
+import { v4 as uuidv4 } from 'uuid';
 
 export interface IStorage {
-  getUpiIds(): Promise<UpiId[]>;
+  getUpiIds(includeDeleted?: boolean): Promise<UpiId[]>;
   addUpiId(upi: InsertUpi): Promise<UpiId>;
   toggleUpiId(id: number): Promise<UpiId>;
   blockUpiId(id: number): Promise<UpiId>;
   unblockUpiId(id: number): Promise<UpiId>;
-  deleteUpiId(id: number): Promise<void>;
+  deleteUpiId(id: number): Promise<UpiId>;
   createTransaction(tx: InsertTransaction): Promise<Transaction>;
   getTransaction(reference: string): Promise<Transaction | undefined>;
   getTransactions(): Promise<Transaction[]>;
 }
 
 export class DatabaseStorage implements IStorage {
-  async getUpiIds(): Promise<UpiId[]> {
-    return await db.select().from(upiIds);
+  async getUpiIds(includeDeleted: boolean = false): Promise<UpiId[]> {
+    let query = db.select().from(upiIds);
+    if (!includeDeleted) {
+      query = query.where(isNull(upiIds.deletedAt));
+    }
+    return await query;
   }
 
   async addUpiId(upi: InsertUpi): Promise<UpiId> {
@@ -57,17 +62,23 @@ export class DatabaseStorage implements IStorage {
     return updated;
   }
 
-  async deleteUpiId(id: number): Promise<void> {
-    await db.delete(upiIds).where(eq(upiIds.id, id));
+  async deleteUpiId(id: number): Promise<UpiId> {
+    const [updated] = await db
+      .update(upiIds)
+      .set({ deletedAt: new Date() })
+      .where(eq(upiIds.id, id))
+      .returning();
+    return updated;
   }
 
   async createTransaction(tx: InsertTransaction): Promise<Transaction> {
+    const reference = uuidv4();
     const [transaction] = await db
       .insert(transactions)
       .values({
         ...tx,
+        reference,
         status: tx.status || "pending",
-        reference: tx.reference,
         timestamp: new Date(),
       })
       .returning();
