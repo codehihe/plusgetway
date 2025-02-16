@@ -30,7 +30,18 @@ type PaymentFormData = z.infer<typeof paymentSchema>;
 
 const generateUpiLink = (upi: UpiId, amount: string, reference: string) => {
   try {
-    const cleanAmount = parseFloat(amount).toFixed(2);
+    if (!upi?.upiId || !amount || !reference) {
+      console.error("Missing required parameters for UPI link generation");
+      return null;
+    }
+
+    const parsedAmount = parseFloat(amount);
+    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+      console.error("Invalid amount for UPI link generation");
+      return null;
+    }
+
+    const cleanAmount = parsedAmount.toFixed(2);
     const cleanReference = reference.replace(/[^a-zA-Z0-9]/g, '');
     const cleanUpiId = upi.upiId.trim();
     const cleanMerchantName = encodeURIComponent(upi.merchantName.trim());
@@ -53,6 +64,22 @@ const generateUpiLink = (upi: UpiId, amount: string, reference: string) => {
   }
 };
 
+const formatAmount = (amount: string) => {
+  try {
+    const parsedAmount = parseFloat(amount);
+    if (isNaN(parsedAmount)) return "₹0.00";
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(parsedAmount);
+  } catch (error) {
+    console.error("Error formatting amount:", error);
+    return "₹0.00";
+  }
+};
+
 const PaymentCard = ({ upi }: { upi: UpiId }) => {
   const [showQR, setShowQR] = useState(false);
   const [reference, setReference] = useState("");
@@ -68,8 +95,13 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
   });
 
   useEffect(() => {
-    let timer: NodeJS.Timeout;
-    let statusCheck: NodeJS.Timeout;
+    let timer: NodeJS.Timeout | null = null;
+    let statusCheck: NodeJS.Timeout | null = null;
+
+    const clearTimers = () => {
+      if (timer) clearInterval(timer);
+      if (statusCheck) clearInterval(statusCheck);
+    };
 
     if (showQR && timeLeft > 0) {
       timer = setInterval(() => {
@@ -78,27 +110,29 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
 
       statusCheck = setInterval(async () => {
         try {
+          if (!reference) {
+            console.error("Missing reference for status check");
+            return;
+          }
+
           const res = await apiRequest("GET", `/api/transactions/${reference}`);
           const transaction = await res.json();
-          
+
           if (transaction.status === "success") {
             setPaymentStatus("success");
-            clearInterval(statusCheck);
-            clearInterval(timer);
+            clearTimers();
             toast({
               title: "✅ Payment Successful",
-              description: `Payment of ${formatAmount(transaction.amount)} received successfully. Transaction ID: ${transaction.reference}`,
+              description: `Payment of ${formatAmount(form.getValues("amount"))} received successfully. Transaction ID: ${transaction.reference}`,
               variant: "default",
               duration: 5000,
             });
-            // Refresh the page after 3 seconds on success
             setTimeout(() => {
               window.location.reload();
             }, 3000);
           } else if (transaction.status === "failed") {
             setPaymentStatus("failed");
-            clearInterval(statusCheck);
-            clearInterval(timer);
+            clearTimers();
             toast({
               title: "❌ Payment Failed",
               description: "Transaction failed or was cancelled. Please try again or contact support if the amount was deducted.",
@@ -107,8 +141,7 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
             });
           } else if (transaction.status === "pending" && timeLeft <= 0) {
             setPaymentStatus("failed");
-            clearInterval(statusCheck);
-            clearInterval(timer);
+            clearTimers();
             toast({
               title: "⚠️ Payment Timeout",
               description: "Payment session expired. Please try again.",
@@ -128,10 +161,9 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
     }
 
     return () => {
-      clearInterval(timer);
-      clearInterval(statusCheck);
+      clearTimers();
     };
-  }, [showQR, timeLeft, reference, toast]);
+  }, [showQR, timeLeft, reference, toast, form]);
 
   useEffect(() => {
     if (timeLeft === 0) {
@@ -234,7 +266,6 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
           <div className="p-6">
             {!showQR ? (
               <motion.div className="space-y-6">
-                {/* Trust Badges */}
                 <div className="grid grid-cols-3 gap-4 mb-6">
                   <div className="flex flex-col items-center p-3 bg-white/5 rounded-lg">
                     <Shield className="w-6 h-6 text-green-400 mb-2" />
@@ -516,17 +547,6 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
       </motion.div>
     </AnimatePresence>
   );
-};
-
-
-
-const formatAmount = (amount: string) => {
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(parseFloat(amount));
 };
 
 export default PaymentCard;
