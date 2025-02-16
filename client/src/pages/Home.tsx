@@ -78,7 +78,7 @@ export default function Home() {
           >
             <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">
               <span className="bg-gradient-to-r from-red-300 via-purple-400 to-red-500 animate-gradient bg-clip-text text-transparent bg-[length:200%_auto]">
-                PayEase Hub
+                Plusenode Payment
               </span>
             </h2>
             <p className="text-gray-400 text-center max-w-2xl mx-auto">

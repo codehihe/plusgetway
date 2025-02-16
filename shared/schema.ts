@@ -104,7 +104,7 @@ export type InsertUpi = z.infer<typeof insertUpiSchema>;
 export type Transaction = typeof transactions.$inferSelect;
 export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
 
-export const ADMIN_PIN = "123456";
+export const ADMIN_PIN = "Khushi";
 
 // Audit trail for UPI ID changes
 export const upiAuditLogs = pgTable("upi_audit_logs", {
