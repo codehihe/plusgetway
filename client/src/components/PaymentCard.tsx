@@ -18,11 +18,12 @@ import { SiGooglepay, SiPhonepe, SiPaytm } from "react-icons/si";
 
 const PAYMENT_TIMEOUT = 180; // 3 minutes in seconds
 
+// Update payment schema to enforce minimum amount
 const paymentSchema = z.object({
   amount: z.string()
     .min(1, "Amount is required")
     .regex(/^\d+(\.\d{1,2})?$/, "Please enter a valid amount")
-    .refine((val) => parseFloat(val) > 0, "Amount must be greater than 0")
+    .refine((val) => parseFloat(val) >= 10, "Minimum amount is ₹10")
     .refine((val) => parseFloat(val) <= 100000, "Amount cannot exceed ₹1,00,000"),
 });
 
@@ -36,7 +37,7 @@ const generateUpiLink = (upi: UpiId, amount: string, reference: string) => {
     }
 
     const parsedAmount = parseFloat(amount);
-    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+    if (isNaN(parsedAmount) || parsedAmount < 10) {
       console.error("Invalid amount for UPI link generation");
       return null;
     }
@@ -45,17 +46,16 @@ const generateUpiLink = (upi: UpiId, amount: string, reference: string) => {
     const cleanMerchantName = encodeURIComponent(upi.merchantName.trim());
     const cleanReference = encodeURIComponent(reference.trim());
 
-    // Enhanced UPI link with additional parameters for better compatibility
+    // Standardized UPI link format with explicit purpose
     const params = new URLSearchParams({
-      pa: upi.upiId.trim(),          // Payee VPA
-      pn: cleanMerchantName,         // Payee Name
-      tn: `Payment_${cleanReference}`, // Transaction Note
-      tr: cleanReference,            // Transaction Reference
-      am: cleanAmount,               // Amount
-      cu: "INR",                     // Currency
-      mc: "0000",                    // Merchant Code (default)
-      url: "",                       // URL (optional)
-      mode: "00"                     // UPI Payment Mode
+      pa: upi.upiId.trim(),
+      pn: cleanMerchantName,
+      tn: `Payment to ${cleanMerchantName}`,
+      am: cleanAmount,
+      cu: "INR",
+      mode: "04",
+      tr: cleanReference,
+      purpose: "00"  // P2M payment
     });
 
     return `upi://pay?${params.toString()}`;
@@ -272,7 +272,18 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
 
   const onSubmit = async (data: PaymentFormData) => {
     try {
-      // Check UPI status before initiating transaction
+      // Additional validation for minimum amount
+      const amount = parseFloat(data.amount);
+      if (amount < 10) {
+        toast({
+          title: "Invalid Amount",
+          description: "Minimum transaction amount is ₹10",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Check UPI status
       if (upi.blockedAt) {
         toast({
           title: "Error",
@@ -282,19 +293,10 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
         return;
       }
 
-      if (upi.deletedAt) {
+      if (!upi.isActive || upi.deletedAt) {
         toast({
           title: "Error",
           description: "This UPI ID is no longer active.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      if (!upi.isActive) {
-        toast({
-          title: "Error",
-          description: "This UPI ID is currently inactive.",
           variant: "destructive",
         });
         return;
