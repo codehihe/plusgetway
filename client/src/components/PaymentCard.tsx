@@ -21,6 +21,17 @@ const paymentSchema = z.object({
 
 type PaymentFormData = z.infer<typeof paymentSchema>;
 
+const generateUpiLink = (upi: UpiId, amount: string, reference: string) => {
+  const params = new URLSearchParams({
+    pa: upi.upiId,
+    pn: upi.merchantName,
+    am: amount,
+    tr: reference,
+    cu: "INR",
+  });
+  return `upi://pay?${params.toString()}`;
+};
+
 export default function PaymentCard({ upi }: { upi: UpiId }) {
   const [showQR, setShowQR] = useState(false);
   const [reference, setReference] = useState("");
@@ -110,9 +121,7 @@ export default function PaymentCard({ upi }: { upi: UpiId }) {
     }
   };
 
-  const upiLink = showQR
-    ? `upi://pay?pa=${upi.upiId}&pn=${encodeURIComponent(upi.merchantName)}&am=${form.getValues("amount")}&tr=${reference}`
-    : "";
+  const upiLink = showQR ? generateUpiLink(upi, form.getValues("amount"), reference) : "";
 
   if (upi.blockedAt) {
     return (
