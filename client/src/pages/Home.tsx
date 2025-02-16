@@ -69,6 +69,48 @@ export default function Home() {
             </div>
           </motion.div>
 
+          {/* Website Banner */}
+          <motion.div
+            className="w-full max-w-4xl mx-auto mb-12 p-8 rounded-2xl bg-gradient-to-r from-red-950/90 to-gray-900/90 border border-red-500/20"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">
+              <span className="bg-gradient-to-r from-red-300 via-purple-400 to-red-500 animate-gradient bg-clip-text text-transparent bg-[length:200%_auto]">
+                PayEase Hub
+              </span>
+            </h2>
+            <p className="text-gray-400 text-center max-w-2xl mx-auto">
+              Your trusted platform for seamless digital payments. Experience secure, instant, and hassle-free transactions with India's leading UPI payment system.
+            </p>
+          </motion.div>
+
+          {/* Statistics Section */}
+          <motion.div
+            className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto mb-12"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25 }}
+          >
+            <div className="text-center p-4 bg-white/5 rounded-lg">
+              <h3 className="text-2xl font-bold text-red-400">10M+</h3>
+              <p className="text-gray-400 text-sm">Daily Transactions</p>
+            </div>
+            <div className="text-center p-4 bg-white/5 rounded-lg">
+              <h3 className="text-2xl font-bold text-red-400">50K+</h3>
+              <p className="text-gray-400 text-sm">Active Merchants</p>
+            </div>
+            <div className="text-center p-4 bg-white/5 rounded-lg">
+              <h3 className="text-2xl font-bold text-red-400">99.9%</h3>
+              <p className="text-gray-400 text-sm">Success Rate</p>
+            </div>
+            <div className="text-center p-4 bg-white/5 rounded-lg">
+              <h3 className="text-2xl font-bold text-red-400">24/7</h3>
+              <p className="text-gray-400 text-sm">Support</p>
+            </div>
+          </motion.div>
+
           {/* Payment Apps Section */}
           <motion.div 
             className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto mb-12"
