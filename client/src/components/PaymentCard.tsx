@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { UpiId } from "@shared/schema";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -85,6 +85,8 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
   const [reference, setReference] = useState("");
   const [timeLeft, setTimeLeft] = useState(PAYMENT_TIMEOUT);
   const [paymentStatus, setPaymentStatus] = useState<"pending" | "success" | "failed">("pending");
+  const [wsConnected, setWsConnected] = useState(false);
+  const wsRef = useRef<WebSocket | null>(null);
   const { toast } = useToast();
 
   const form = useForm<PaymentFormData>({
@@ -94,6 +96,67 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
     },
   });
 
+  // WebSocket connection setup
+  const setupWebSocket = useCallback(() => {
+    if (!reference) return;
+
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    const wsUrl = `${protocol}//${window.location.host}/ws`;
+    const ws = new WebSocket(wsUrl);
+    wsRef.current = ws;
+
+    ws.onopen = () => {
+      setWsConnected(true);
+      ws.send(JSON.stringify({ type: 'subscribe', reference }));
+    };
+
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === 'payment_status' && data.reference === reference) {
+          if (data.status === 'success') {
+            setPaymentStatus('success');
+            toast({
+              title: "✅ Payment Successful",
+              description: `Payment of ${formatAmount(form.getValues("amount"))} received successfully. Transaction ID: ${reference}`,
+              variant: "default",
+              duration: 5000,
+            });
+            setTimeout(() => {
+              window.location.reload();
+            }, 3000);
+          } else if (data.status === 'failed') {
+            setPaymentStatus('failed');
+            toast({
+              title: "❌ Payment Failed",
+              description: "Transaction failed or was cancelled. Please try again or contact support if the amount was deducted.",
+              variant: "destructive",
+              duration: 7000,
+            });
+          }
+        }
+      } catch (error) {
+        console.error('WebSocket message parsing error:', error);
+      }
+    };
+
+    ws.onerror = (error) => {
+      console.error('WebSocket error:', error);
+      setWsConnected(false);
+    };
+
+    ws.onclose = () => {
+      setWsConnected(false);
+    };
+
+    return () => {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.close();
+      }
+    };
+  }, [reference, toast, form]);
+
+  // Fallback polling mechanism
   useEffect(() => {
     let timer: NodeJS.Timeout | null = null;
     let statusCheck: NodeJS.Timeout | null = null;
@@ -103,7 +166,7 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
       if (statusCheck) clearInterval(statusCheck);
     };
 
-    if (showQR && timeLeft > 0) {
+    if (showQR && timeLeft > 0 && !wsConnected) {
       timer = setInterval(() => {
         setTimeLeft((prev) => prev - 1);
       }, 1000);
@@ -123,7 +186,7 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
             clearTimers();
             toast({
               title: "✅ Payment Successful",
-              description: `Payment of ${formatAmount(form.getValues("amount"))} received successfully. Transaction ID: ${transaction.reference}`,
+              description: `Payment of ${formatAmount(form.getValues("amount"))} received successfully. Transaction ID: ${reference}`,
               variant: "default",
               duration: 5000,
             });
@@ -151,19 +214,48 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
           }
         } catch (error) {
           console.error("Failed to check payment status:", error);
-          toast({
-            title: "Error",
-            description: "Unable to verify payment status. Please check your transaction history.",
-            variant: "destructive",
-          });
+          if (!wsConnected) {
+            toast({
+              title: "Error",
+              description: "Unable to verify payment status. Please check your transaction history.",
+              variant: "destructive",
+            });
+          }
         }
-      }, 3000); // Check every 3 seconds
+      }, 3000);
     }
 
     return () => {
       clearTimers();
     };
-  }, [showQR, timeLeft, reference, toast, form]);
+  }, [showQR, timeLeft, reference, toast, form, wsConnected]);
+
+  // Initialize WebSocket connection
+  useEffect(() => {
+    if (showQR && reference) {
+      const cleanup = setupWebSocket();
+      return () => {
+        cleanup?.();
+        if (wsRef.current?.readyState === WebSocket.OPEN) {
+          wsRef.current.close();
+        }
+      };
+    }
+  }, [showQR, reference, setupWebSocket]);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout | null = null;
+
+    if (showQR && timeLeft > 0) {
+      timer = setInterval(() => {
+        setTimeLeft((prev) => prev - 1);
+      }, 1000);
+    }
+
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [showQR, timeLeft]);
 
   useEffect(() => {
     if (timeLeft === 0) {
