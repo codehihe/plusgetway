@@ -21,7 +21,11 @@ export const transactions = pgTable("transactions", {
 });
 
 export const insertUpiSchema = createInsertSchema(upiIds).omit({ id: true, isActive: true, blockedAt: true });
-export const insertTransactionSchema = createInsertSchema(transactions).omit({ id: true, timestamp: true });
+export const insertTransactionSchema = createInsertSchema(transactions)
+  .omit({ id: true, timestamp: true, reference: true })
+  .extend({
+    amount: z.string().transform((val) => parseInt(val, 10)),
+  });
 
 export type UpiId = typeof upiIds.$inferSelect;
 export type InsertUpi = z.infer<typeof insertUpiSchema>;

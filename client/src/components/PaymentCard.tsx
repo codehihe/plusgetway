@@ -90,9 +90,8 @@ export default function PaymentCard({ upi }: { upi: UpiId }) {
 
   const onSubmit = async (data: PaymentFormData) => {
     try {
-      const amount = parseInt(data.amount);
       const res = await apiRequest("POST", "/api/transactions", {
-        amount,
+        amount: data.amount,
         upiId: upi.upiId,
         merchantName: upi.merchantName,
         status: "pending",
@@ -105,7 +104,7 @@ export default function PaymentCard({ upi }: { upi: UpiId }) {
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to create payment",
+        description: "Failed to create payment. Please try again.",
         variant: "destructive",
       });
     }
