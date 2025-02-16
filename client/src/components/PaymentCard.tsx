@@ -180,10 +180,11 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
+        className="transform-gpu"
       >
-        <Card className="p-6 backdrop-blur-lg bg-white/10 border-red-500/20 mb-4">
+        <Card className="p-6 backdrop-blur-lg bg-red-950/80 border-red-500/20 mb-4">
           <div className="flex items-center gap-4 text-red-400">
-            <AlertTriangle className="w-8 h-8" />
+            <AlertTriangle className="w-8 h-8 animate-pulse" />
             <div>
               <h2 className="text-xl font-semibold">Account Blocked</h2>
               <p className="text-sm text-gray-400">This UPI ID is currently unavailable</p>
@@ -202,9 +203,11 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
         exit={{ scale: 0.9, opacity: 0 }}
         whileHover={{ scale: 1.02 }}
         transition={{ type: "spring", stiffness: 300, damping: 25 }}
+        className="transform-gpu"
       >
-        <Card className="p-6 backdrop-blur-lg bg-gradient-to-br from-red-950/80 to-gray-900/80 border-red-500/20 mb-4 shadow-xl hover:shadow-red-500/10 transition-all duration-300">
-          <div className="mb-6">
+        <Card className="overflow-hidden backdrop-blur-lg bg-gradient-to-br from-red-950/90 to-gray-900/90 border-red-500/20 mb-4 shadow-xl hover:shadow-red-500/10 transition-all duration-300">
+          {/* Header Section */}
+          <div className="p-6 border-b border-red-500/20">
             <motion.div
               initial={{ x: -20 }}
               animate={{ x: 0 }}
@@ -218,185 +221,253 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
                     Verified
                   </Badge>
                 </h2>
+                <p className="text-sm text-gray-400 mt-1">{upi.upiId}</p>
               </div>
               <QrCode className="w-6 h-6 text-red-400" />
             </motion.div>
           </div>
 
-          {!showQR ? (
-            <motion.form 
-              onSubmit={form.handleSubmit(onSubmit)} 
-              className="space-y-4"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-            >
-              <div className="space-y-2">
-                <label className="text-sm text-gray-400">Enter Amount</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                    <IndianRupee className="h-4 w-4 text-gray-400" />
-                  </div>
-                  <Input
-                    type="number"
-                    placeholder="0.00"
-                    step="0.01"
-                    min="0.01"
-                    max="100000"
-                    {...form.register("amount")}
-                    className="pl-9 bg-white/5 border-red-500/20 text-white focus:ring-red-500/30 transition-all duration-300 text-lg font-medium"
-                  />
-                </div>
-                {form.formState.errors.amount && (
-                  <motion.p 
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="text-sm text-red-400 mt-1"
-                  >
-                    {form.formState.errors.amount.message}
-                  </motion.p>
-                )}
-              </div>
-
-              <div className="py-4">
-                <p className="text-sm text-gray-400 mb-3">Pay using any of these apps</p>
-                <div className="flex justify-around items-center bg-white/5 p-4 rounded-lg">
-                  <SiGooglepay className="w-10 h-10 text-white/80 hover:text-white transition-colors" />
-                  <SiPhonepe className="w-10 h-10 text-white/80 hover:text-white transition-colors" />
-                  <SiPaytm className="w-10 h-10 text-white/80 hover:text-white transition-colors" />
-                </div>
-              </div>
-
-              <div className="bg-white/5 p-4 rounded-lg space-y-2">
-                <p className="text-sm text-gray-400">Transaction Details</p>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-400">Transaction Limit</span>
-                  <span className="text-white">₹1,00,000</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-400">Processing Fee</span>
-                  <span className="text-green-400">Free</span>
-                </div>
-              </div>
-
-              <Button 
-                type="submit" 
-                className="w-full bg-red-500 hover:bg-red-600 transform hover:scale-[1.02] transition-all duration-300"
-              >
-                <ShoppingCart className="w-4 h-4 mr-2" />
-                Proceed to Pay
-              </Button>
-            </motion.form>
-          ) : (
-            <motion.div 
-              className="space-y-6"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.3 }}
-            >
-              <div className="bg-white p-6 rounded-lg flex flex-col items-center relative">
-                <div className="absolute inset-0 bg-gradient-to-br from-red-50 to-white opacity-10 rounded-lg" />
-
-                {upiLink ? (
-                  <>
-                    <motion.div
-                      initial={{ scale: 0.8, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      transition={{ delay: 0.3 }}
-                      className="bg-white p-4 rounded-lg"
-                    >
-                      <QRCode
-                        value={upiLink}
-                        size={200}
-                        level="H"
-                        className="w-full h-auto"
-                      />
-                    </motion.div>
-                    <motion.div 
-                      className="text-center mt-4"
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.4 }}
-                    >
-                      <p className="text-white font-medium">Scan QR with any UPI app</p>
-                      <p className="text-red-400 text-xl font-bold mt-2">
-                        {formatAmount(form.getValues("amount"))}
-                      </p>
-                      <p className="text-gray-400 text-sm mt-1">
-                        To: {upi.merchantName}
-                      </p>
-                    </motion.div>
-                  </>
-                ) : (
-                  <div className="text-center p-4">
-                    <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-2" />
-                    <p className="text-red-500 font-medium">Invalid UPI Configuration</p>
-                    <p className="text-gray-500 text-sm mt-1">
-                      Please contact the administrator
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              <motion.div 
-                className="grid grid-cols-2 gap-3"
+          <div className="p-6">
+            {!showQR ? (
+              <motion.form 
+                onSubmit={form.handleSubmit(onSubmit)} 
+                className="space-y-6"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
+                transition={{ delay: 0.2 }}
               >
-                <Button
-                  variant="outline"
-                  className="border-red-500/20 text-red-400 hover:bg-red-500/10 transition-all duration-300"
-                  onClick={copyUpiLink}
-                >
-                  <Copy className="w-4 h-4 mr-2" />
-                  Copy Link
-                </Button>
-                <Button
-                  variant="outline"
-                  className="border-red-500/20 text-red-400 hover:bg-red-500/10 transition-all duration-300"
-                  onClick={() => {
-                    if (upiLink) {
-                      window.open(upiLink, '_blank');
-                    }
-                  }}
-                >
-                  <Smartphone className="w-4 h-4 mr-2" />
-                  Open in App
-                </Button>
-              </motion.div>
-
-              <motion.div 
-                className="space-y-2"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.6 }}
-              >
-                <div className="flex justify-between text-sm text-gray-400">
-                  <div className="flex items-center gap-2">
-                    <Timer className="w-4 h-4" />
-                    <span>Session expires in</span>
+                {/* Amount Input */}
+                <div className="space-y-2">
+                  <label className="text-sm text-gray-400">Enter Amount</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                      <IndianRupee className="h-4 w-4 text-gray-400" />
+                    </div>
+                    <Input
+                      type="number"
+                      placeholder="0.00"
+                      step="0.01"
+                      min="0.01"
+                      max="100000"
+                      {...form.register("amount")}
+                      className="pl-9 bg-white/5 border-red-500/20 text-white focus:ring-red-500/30 transition-all duration-300 text-lg font-medium"
+                    />
                   </div>
-                  <span>{Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}</span>
+                  {form.formState.errors.amount && (
+                    <motion.p 
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="text-sm text-red-400 mt-1"
+                    >
+                      {form.formState.errors.amount.message}
+                    </motion.p>
+                  )}
                 </div>
-                <motion.div
-                  initial={{ scaleX: 0 }}
-                  animate={{ scaleX: 1 }}
-                  transition={{ duration: 0.5 }}
-                >
-                  <Progress value={(timeLeft / PAYMENT_TIMEOUT) * 100} className="h-1" />
-                </motion.div>
-              </motion.div>
 
-              <Button
-                variant="outline"
-                className="w-full border-red-500/20 text-red-400 hover:bg-red-500/10 transition-all duration-300"
-                onClick={() => setShowQR(false)}
+                {/* Payment Apps Section */}
+                <div className="py-4">
+                  <p className="text-sm text-gray-400 mb-3">Supported Payment Apps</p>
+                  <div className="grid grid-cols-3 gap-4 bg-white/5 p-4 rounded-lg">
+                    <motion.div 
+                      whileHover={{ scale: 1.1 }}
+                      className="flex flex-col items-center gap-2"
+                    >
+                      <SiGooglepay className="w-12 h-12 text-white/80 hover:text-white transition-colors" />
+                      <span className="text-xs text-gray-400">Google Pay</span>
+                    </motion.div>
+                    <motion.div 
+                      whileHover={{ scale: 1.1 }}
+                      className="flex flex-col items-center gap-2"
+                    >
+                      <SiPhonepe className="w-12 h-12 text-white/80 hover:text-white transition-colors" />
+                      <span className="text-xs text-gray-400">PhonePe</span>
+                    </motion.div>
+                    <motion.div 
+                      whileHover={{ scale: 1.1 }}
+                      className="flex flex-col items-center gap-2"
+                    >
+                      <SiPaytm className="w-12 h-12 text-white/80 hover:text-white transition-colors" />
+                      <span className="text-xs text-gray-400">Paytm</span>
+                    </motion.div>
+                  </div>
+                </div>
+
+                {/* Transaction Details */}
+                <div className="space-y-3 bg-white/5 p-4 rounded-lg">
+                  <p className="text-sm font-medium text-gray-400">Transaction Details</p>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-400">Transaction Limit</span>
+                    <span className="text-white">₹1,00,000</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-400">Processing Fee</span>
+                    <span className="text-green-400">Free</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-400">Settlement Time</span>
+                    <span className="text-white">Instant</span>
+                  </div>
+                </div>
+
+                {/* Submit Button */}
+                <Button 
+                  type="submit" 
+                  className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 transform hover:scale-[1.02] transition-all duration-300"
+                >
+                  <ShoppingCart className="w-4 h-4 mr-2" />
+                  Proceed to Pay
+                </Button>
+              </motion.form>
+            ) : (
+              <motion.div 
+                className="space-y-6"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.3 }}
               >
-                Cancel Payment
-              </Button>
-            </motion.div>
-          )}
+                {/* QR Code Section */}
+                <div className="bg-gradient-to-br from-gray-900 to-red-950 p-6 rounded-lg flex flex-col items-center relative overflow-hidden">
+                  <div className="absolute inset-0 bg-grid-white/5 mask-gradient" />
+
+                  {upiLink ? (
+                    <>
+                      <motion.div
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ delay: 0.3 }}
+                        className="bg-white p-4 rounded-lg shadow-xl"
+                      >
+                        <QRCode
+                          value={upiLink}
+                          size={200}
+                          level="H"
+                          className="w-full h-auto"
+                        />
+                      </motion.div>
+                      <motion.div 
+                        className="text-center mt-6 space-y-2"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.4 }}
+                      >
+                        <p className="text-white font-medium">Scan QR with any UPI app</p>
+                        <p className="text-red-400 text-2xl font-bold">
+                          {formatAmount(form.getValues("amount"))}
+                        </p>
+                        <p className="text-gray-400 text-sm">
+                          To: {upi.merchantName}
+                        </p>
+                        <p className="text-gray-500 text-xs">
+                          Reference: {reference}
+                        </p>
+                      </motion.div>
+                    </>
+                  ) : (
+                    <div className="text-center p-4">
+                      <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-2" />
+                      <p className="text-red-500 font-medium">Invalid UPI Configuration</p>
+                      <p className="text-gray-500 text-sm mt-1">
+                        Please contact the administrator
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Action Buttons */}
+                <motion.div 
+                  className="grid grid-cols-2 gap-3"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 }}
+                >
+                  <Button
+                    variant="outline"
+                    className="border-red-500/20 text-red-400 hover:bg-red-500/10 transition-all duration-300"
+                    onClick={copyUpiLink}
+                  >
+                    <Copy className="w-4 h-4 mr-2" />
+                    Copy Link
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="border-red-500/20 text-red-400 hover:bg-red-500/10 transition-all duration-300"
+                    onClick={() => {
+                      if (upiLink) {
+                        window.open(upiLink, '_blank');
+                      }
+                    }}
+                  >
+                    <ExternalLink className="w-4 h-4 mr-2" />
+                    Open in App
+                  </Button>
+                </motion.div>
+
+                {/* Timer Section */}
+                <motion.div 
+                  className="space-y-2"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.6 }}
+                >
+                  <div className="flex justify-between items-center text-sm text-gray-400">
+                    <div className="flex items-center gap-2">
+                      <Timer className="w-4 h-4" />
+                      <span>Session expires in</span>
+                    </div>
+                    <span className="font-mono">
+                      {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
+                    </span>
+                  </div>
+                  <Progress 
+                    value={(timeLeft / PAYMENT_TIMEOUT) * 100} 
+                    className="h-1 bg-red-950"
+                  />
+                </motion.div>
+
+                {/* Status Indicators */}
+                {paymentStatus !== "pending" && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className={`p-4 rounded-lg ${
+                      paymentStatus === "success" 
+                        ? "bg-green-500/10 border border-green-500/20" 
+                        : "bg-red-500/10 border border-red-500/20"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      {paymentStatus === "success" ? (
+                        <CheckCircle2 className="w-5 h-5 text-green-500" />
+                      ) : (
+                        <XCircle className="w-5 h-5 text-red-500" />
+                      )}
+                      <div>
+                        <p className={`font-medium ${
+                          paymentStatus === "success" ? "text-green-400" : "text-red-400"
+                        }`}>
+                          {paymentStatus === "success" ? "Payment Successful" : "Payment Failed"}
+                        </p>
+                        <p className="text-sm text-gray-400">
+                          {paymentStatus === "success" 
+                            ? "Your transaction has been completed" 
+                            : "Please try again or contact support"}
+                        </p>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* Cancel Button */}
+                <Button
+                  variant="outline"
+                  className="w-full border-red-500/20 text-red-400 hover:bg-red-500/10 transition-all duration-300"
+                  onClick={() => setShowQR(false)}
+                >
+                  Cancel Payment
+                </Button>
+              </motion.div>
+            )}
+          </div>
         </Card>
       </motion.div>
     </AnimatePresence>

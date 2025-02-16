@@ -4,9 +4,10 @@ import { UpiId } from "@shared/schema";
 import PaymentCard from "@/components/PaymentCard";
 import AdminLogin from "@/components/AdminLogin";
 import { Button } from "@/components/ui/button";
-import { Settings, AlertCircle, Shield, Smartphone, Clock } from "lucide-react";
+import { Settings, AlertCircle, Shield, Smartphone, Clock, ChevronRight, CheckCircle, Lock, Zap } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card } from "@/components/ui/card";
+import { SiGooglepay, SiPhonepe, SiPaytm } from "react-icons/si";
 
 export default function Home() {
   const [showAdminLogin, setShowAdminLogin] = useState(false);
@@ -33,84 +34,135 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-950 to-gray-900 p-4">
-      <div className="max-w-lg mx-auto">
-        <div className="flex justify-between items-center mb-8">
+    <div className="min-h-screen bg-gradient-to-br from-red-950 to-gray-900">
+      {/* Hero Section */}
+      <div className="w-full px-4 py-12 md:py-24">
+        <div className="max-w-4xl mx-auto text-center">
           <motion.h1 
-            className="text-3xl font-bold text-red-500"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
+            className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-red-400 to-red-600 bg-clip-text text-transparent mb-6"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            Secure UPI Payment
+            Secure UPI Payments
           </motion.h1>
+          <motion.p 
+            className="text-lg md:text-xl text-gray-400 mb-8"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+          >
+            Experience fast, secure, and hassle-free digital payments
+          </motion.p>
+
+          {/* Payment App Logos */}
+          <motion.div 
+            className="flex justify-center gap-8 mb-12"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            <SiGooglepay className="w-16 h-16 text-white/80" />
+            <SiPhonepe className="w-16 h-16 text-white/80" />
+            <SiPaytm className="w-16 h-16 text-white/80" />
+          </motion.div>
+        </div>
+      </div>
+
+      <div className="max-w-lg mx-auto px-4 pb-12">
+        {/* Admin Button */}
+        <div className="flex justify-end mb-8">
           <Button 
             variant="ghost" 
             size="icon"
             onClick={() => setShowAdminLogin(true)}
+            className="hover:bg-red-500/10"
           >
             <Settings className="h-5 w-5 text-red-400" />
           </Button>
         </div>
 
-        {/* Feature Highlights Section */}
+        {/* Features Grid */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8"
+          className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8"
         >
-          <Card className="p-4 backdrop-blur-lg bg-white/5 border-red-500/20">
-            <Shield className="h-8 w-8 text-red-400 mb-2" />
-            <h3 className="text-lg font-semibold text-red-400">Secure</h3>
-            <p className="text-sm text-gray-400">End-to-end encrypted transactions with advanced security measures</p>
-            <ul className="text-xs text-gray-500 mt-2 list-disc list-inside">
-              <li>SSL Encryption</li>
-              <li>Real-time monitoring</li>
-              <li>Fraud protection</li>
+          <Card className="p-6 backdrop-blur-lg bg-white/5 border-red-500/20 hover:bg-white/10 transition-all duration-300">
+            <Shield className="h-8 w-8 text-red-400 mb-4" />
+            <h3 className="text-xl font-semibold text-red-400 mb-2">Bank-Grade Security</h3>
+            <p className="text-gray-400 mb-4">End-to-end encrypted transactions with advanced security measures</p>
+            <ul className="space-y-2 text-sm text-gray-500">
+              <li className="flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-green-500" />
+                256-bit SSL Encryption
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-green-500" />
+                Real-time Monitoring
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-green-500" />
+                Fraud Protection
+              </li>
             </ul>
           </Card>
-          <Card className="p-4 backdrop-blur-lg bg-white/5 border-red-500/20">
-            <Smartphone className="h-8 w-8 text-red-400 mb-2" />
-            <h3 className="text-lg font-semibold text-red-400">Convenient</h3>
-            <p className="text-sm text-gray-400">Pay using any UPI app</p>
-          </Card>
-          <Card className="p-4 backdrop-blur-lg bg-white/5 border-red-500/20">
-            <Clock className="h-8 w-8 text-red-400 mb-2" />
-            <h3 className="text-lg font-semibold text-red-400">Instant</h3>
-            <p className="text-sm text-gray-400">Real-time payment verification</p>
+
+          <Card className="p-6 backdrop-blur-lg bg-white/5 border-red-500/20 hover:bg-white/10 transition-all duration-300">
+            <Zap className="h-8 w-8 text-red-400 mb-4" />
+            <h3 className="text-xl font-semibold text-red-400 mb-2">Lightning Fast</h3>
+            <p className="text-gray-400 mb-4">Process payments instantly with real-time verification</p>
+            <ul className="space-y-2 text-sm text-gray-500">
+              <li className="flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-green-500" />
+                Instant Transfers
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-green-500" />
+                Quick QR Scanning
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-green-500" />
+                24/7 Availability
+              </li>
+            </ul>
           </Card>
         </motion.div>
 
-        <AnimatePresence mode="wait">
-          {isLoading ? (
-            <motion.div
-              key="loading"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              <Card className="p-8 backdrop-blur-lg bg-white/10 border-red-500/20">
-                <div className="flex flex-col items-center space-y-4">
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                  >
-                    <div className="w-8 h-8 border-2 border-red-500 border-t-transparent rounded-full" />
-                  </motion.div>
-                  <p className="text-gray-400">Loading payment options...</p>
-                </div>
-              </Card>
-            </motion.div>
-          ) : activeUpiIds.length > 0 ? (
-            <>
+        {/* Payment Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-semibold text-red-400 mb-2">Make a Payment</h2>
+              <p className="text-gray-400 text-sm">Choose your preferred payment method</p>
+            </div>
+          </div>
+
+          <AnimatePresence mode="wait">
+            {isLoading ? (
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mb-6"
+                key="loading"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
               >
-                <h2 className="text-xl font-semibold text-red-400 mb-2">Available Payment Methods</h2>
-                <p className="text-gray-400 text-sm">Select a payment method below to proceed with your transaction</p>
+                <Card className="p-8 backdrop-blur-lg bg-white/10 border-red-500/20">
+                  <div className="flex flex-col items-center space-y-4">
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                    >
+                      <div className="w-8 h-8 border-2 border-red-500 border-t-transparent rounded-full" />
+                    </motion.div>
+                    <p className="text-gray-400">Loading payment options...</p>
+                  </div>
+                </Card>
               </motion.div>
+            ) : activeUpiIds.length > 0 ? (
               <motion.div
                 variants={container}
                 initial="hidden"
@@ -122,81 +174,96 @@ export default function Home() {
                   </motion.div>
                 ))}
               </motion.div>
-            </>
-          ) : (
-            <motion.div
-              key="no-upi"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.9 }}
-            >
-              <Card className="p-8 backdrop-blur-lg bg-white/10 border-red-500/20">
-                <div className="flex flex-col items-center text-center space-y-4">
-                  <AlertCircle className="w-12 h-12 text-red-400" />
-                  <div>
-                    <h2 className="text-xl font-semibold text-red-400 mb-2">
-                      No Payment Methods Available
-                    </h2>
-                    <p className="text-gray-400">
-                      No active UPI IDs are currently configured.
-                    </p>
-                    <p className="text-gray-500 text-sm mt-2">
-                      Please contact the administrator to set up payment methods.
-                    </p>
+            ) : (
+              <motion.div
+                key="no-upi"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+              >
+                <Card className="p-8 backdrop-blur-lg bg-white/10 border-red-500/20">
+                  <div className="flex flex-col items-center text-center space-y-4">
+                    <AlertCircle className="w-12 h-12 text-red-400" />
+                    <div>
+                      <h2 className="text-xl font-semibold text-red-400 mb-2">
+                        No Payment Methods Available
+                      </h2>
+                      <p className="text-gray-400">
+                        No active UPI IDs are currently configured.
+                      </p>
+                      <p className="text-gray-500 text-sm mt-2">
+                        Please contact the administrator to set up payment methods.
+                      </p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      className="mt-4 border-red-500/20 text-red-400 hover:bg-red-500/10"
+                      onClick={() => setShowAdminLogin(true)}
+                    >
+                      <Settings className="w-4 h-4 mr-2" />
+                      Admin Login
+                    </Button>
                   </div>
-                  <Button
-                    variant="outline"
-                    className="mt-4 border-red-500/20 text-red-400"
-                    onClick={() => setShowAdminLogin(true)}
-                  >
-                    <Settings className="w-4 h-4 mr-2" />
-                    Admin Login
-                  </Button>
-                </div>
-              </Card>
-            </motion.div>
-          )}
-        </AnimatePresence>
+                </Card>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
 
-        {/* Trust and Security Section */}
+        {/* Trust Indicators */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="mt-8 p-6 backdrop-blur-lg bg-white/5 border-red-500/20 rounded-lg"
+          className="space-y-6"
         >
-          <h2 className="text-xl font-semibold text-red-400 mb-4">Trusted & Secure</h2>
-          <div className="space-y-4">
-            <div className="flex items-start gap-3">
+          <h2 className="text-2xl font-semibold text-red-400 mb-6">Why Choose Us</h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex items-start gap-4 p-4 rounded-lg bg-white/5">
               <div className="p-2 bg-red-500/10 rounded-lg">
-                <Shield className="h-6 w-6 text-red-400" />
+                <Lock className="h-6 w-6 text-red-400" />
               </div>
               <div>
-                <h3 className="text-sm font-medium text-red-300">Advanced Security</h3>
-                <p className="text-xs text-gray-400 mt-1">
-                  Your transactions are protected with industry-standard encryption
+                <h3 className="text-lg font-medium text-red-300">Secure Platform</h3>
+                <p className="text-sm text-gray-400 mt-1">
+                  Multi-layer security with real-time fraud detection
                 </p>
               </div>
             </div>
-            <div className="flex items-start gap-3">
+
+            <div className="flex items-start gap-4 p-4 rounded-lg bg-white/5">
+              <div className="p-2 bg-red-500/10 rounded-lg">
+                <Zap className="h-6 w-6 text-red-400" />
+              </div>
+              <div>
+                <h3 className="text-lg font-medium text-red-300">Instant Payments</h3>
+                <p className="text-sm text-gray-400 mt-1">
+                  Lightning-fast transactions with immediate confirmation
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-4 p-4 rounded-lg bg-white/5">
               <div className="p-2 bg-red-500/10 rounded-lg">
                 <Smartphone className="h-6 w-6 text-red-400" />
               </div>
               <div>
-                <h3 className="text-sm font-medium text-red-300">Multiple UPI Apps</h3>
-                <p className="text-xs text-gray-400 mt-1">
-                  Compatible with all major UPI payment apps including Google Pay, PhonePe, and Paytm
+                <h3 className="text-lg font-medium text-red-300">Universal Compatibility</h3>
+                <p className="text-sm text-gray-400 mt-1">
+                  Works with all major UPI apps and providers
                 </p>
               </div>
             </div>
-            <div className="flex items-start gap-3">
+
+            <div className="flex items-start gap-4 p-4 rounded-lg bg-white/5">
               <div className="p-2 bg-red-500/10 rounded-lg">
                 <Clock className="h-6 w-6 text-red-400" />
               </div>
               <div>
-                <h3 className="text-sm font-medium text-red-300">24/7 Support</h3>
-                <p className="text-xs text-gray-400 mt-1">
-                  Our team is available round the clock to assist you with any payment issues
+                <h3 className="text-lg font-medium text-red-300">24/7 Support</h3>
+                <p className="text-sm text-gray-400 mt-1">
+                  Round-the-clock assistance for all your payment needs
                 </p>
               </div>
             </div>
