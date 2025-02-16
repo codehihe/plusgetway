@@ -267,7 +267,7 @@ export default function Home() {
           <h2 className="text-2xl font-semibold text-red-400 mb-6">Why Choose Us</h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex items-start gap-4 p-4 rounded-lg bg-white/5">
+            <div className="flex items-start gap-4 p-6 rounded-lg bg-white/5 hover:bg-white/10 transition-all duration-300 cursor-pointer">
               <div className="p-2 bg-red-500/10 rounded-lg">
                 <Lock className="h-6 w-6 text-red-400" />
               </div>
@@ -279,7 +279,7 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="flex items-start gap-4 p-4 rounded-lg bg-white/5">
+            <div className="flex items-start gap-4 p-6 rounded-lg bg-white/5 hover:bg-white/10 transition-all duration-300 cursor-pointer">
               <div className="p-2 bg-red-500/10 rounded-lg">
                 <Zap className="h-6 w-6 text-red-400" />
               </div>
@@ -291,7 +291,7 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="flex items-start gap-4 p-4 rounded-lg bg-white/5">
+            <div className="flex items-start gap-4 p-6 rounded-lg bg-white/5 hover:bg-white/10 transition-all duration-300 cursor-pointer">
               <div className="p-2 bg-red-500/10 rounded-lg">
                 <Smartphone className="h-6 w-6 text-red-400" />
               </div>
@@ -303,7 +303,7 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="flex items-start gap-4 p-4 rounded-lg bg-white/5">
+            <div className="flex items-start gap-4 p-6 rounded-lg bg-white/5 hover:bg-white/10 transition-all duration-300 cursor-pointer">
               <div className="p-2 bg-red-500/10 rounded-lg">
                 <Clock className="h-6 w-6 text-red-400" />
               </div>
