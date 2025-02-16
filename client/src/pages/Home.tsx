@@ -96,17 +96,6 @@ export default function Home() {
       </div>
 
       <div className="max-w-lg mx-auto px-4 pb-12">
-        {/* Admin Button */}
-        <div className="flex justify-end mb-8">
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={() => setShowAdminLogin(true)}
-            className="hover:bg-red-500/10"
-          >
-            <Settings className="h-5 w-5 text-red-400" />
-          </Button>
-        </div>
 
         {/* Features Grid */}
         <motion.div 
@@ -314,6 +303,29 @@ export default function Home() {
                 </p>
               </div>
             </div>
+          </div>
+        </motion.div>
+
+        {/* Admin Access Section */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.4 }}
+          className="mt-16 pt-8 border-t border-red-500/20"
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-medium text-red-300">Admin Access</h3>
+              <p className="text-sm text-gray-400">Secure administrative controls</p>
+            </div>
+            <Button 
+              variant="outline"
+              onClick={() => setShowAdminLogin(true)}
+              className="border-red-500/20 text-red-400 hover:bg-red-500/10"
+            >
+              <Settings className="h-4 w-4 mr-2" />
+              Admin Login
+            </Button>
           </div>
         </motion.div>
       </div>
