@@ -12,7 +12,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion, AnimatePresence } from "framer-motion";
 import { Timer, AlertTriangle, CheckCircle2, XCircle, IndianRupee, Copy, ExternalLink,
-  Smartphone, ShoppingCart, QrCode } from "lucide-react";
+  Smartphone, ShoppingCart, QrCode, Shield, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { SiGooglepay, SiPhonepe, SiPaytm } from "react-icons/si";
 
@@ -32,14 +32,8 @@ const generateUpiLink = (upi: UpiId, amount: string, reference: string) => {
   try {
     const cleanAmount = parseFloat(amount).toFixed(2);
     const cleanReference = reference.replace(/[^a-zA-Z0-9]/g, '');
-
     const cleanUpiId = upi.upiId.trim();
     const cleanMerchantName = encodeURIComponent(upi.merchantName.trim());
-
-    const upiIdRegex = /^[a-zA-Z0-9_.+-]+@[a-zA-Z][a-zA-Z0-9]+$/;
-    if (!upiIdRegex.test(cleanUpiId)) {
-      throw new Error("Invalid UPI ID format");
-    }
 
     const params = new URLSearchParams({
       pa: cleanUpiId,
@@ -48,8 +42,8 @@ const generateUpiLink = (upi: UpiId, amount: string, reference: string) => {
       tr: cleanReference,
       cu: "INR",
       tn: `Payment to ${cleanMerchantName}`,
-      mc: "0000",  // Merchant category code
-      mode: "04",  // QR code mode
+      mc: "0000",
+      mode: "04",
     });
 
     return `upi://pay?${params.toString()}`;
@@ -65,8 +59,6 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
   const [timeLeft, setTimeLeft] = useState(PAYMENT_TIMEOUT);
   const [paymentStatus, setPaymentStatus] = useState<"pending" | "success" | "failed">("pending");
   const { toast } = useToast();
-  const [animatedText, setAnimatedText] = useState("");
-  const [animationIndex, setAnimationIndex] = useState(0);
 
   const form = useForm<PaymentFormData>({
     resolver: zodResolver(paymentSchema),
@@ -128,23 +120,6 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
     }
   }, [timeLeft, toast]);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const text = upi.storeName;
-      if (animationIndex < text.length) {
-        setAnimatedText((prev) => prev + text[animationIndex]);
-        setAnimationIndex(prev => prev + 1);
-      } else {
-        setTimeout(() => {
-          setAnimatedText("");
-          setAnimationIndex(0);
-        }, 2000); // Wait 2 seconds before restarting animation
-      }
-    }, 100); // Speed of typing animation
-
-    return () => clearInterval(interval);
-  }, [animationIndex, upi.storeName]);
-
   const onSubmit = async (data: PaymentFormData) => {
     try {
       const res = await apiRequest("POST", "/api/transactions", {
@@ -168,30 +143,6 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
   };
 
   const upiLink = showQR ? generateUpiLink(upi, form.getValues("amount"), reference) : "";
-
-  const copyUpiLink = () => {
-    if (upiLink) {
-      navigator.clipboard.writeText(upiLink);
-      toast({
-        description: "Payment link copied to clipboard",
-      });
-    } else {
-      toast({
-        title: "Error",
-        description: "Unable to copy payment link. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const formatAmount = (amount: string) => {
-    return new Intl.NumberFormat("en-IN", {
-      style: "currency",
-      currency: "INR",
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(parseFloat(amount));
-  };
 
   if (upi.blockedAt) {
     return (
@@ -240,10 +191,13 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
                   </Badge>
                 </h2>
                 <motion.p 
-                  className="text-sm text-gray-400 mt-1"
-                  key={animatedText}
+                  className="text-sm mt-1 bg-gradient-to-r from-red-400 via-orange-400 to-yellow-400 bg-clip-text text-transparent font-medium animate-gradient"
+                  style={{ 
+                    backgroundSize: '200% auto',
+                    animation: 'gradient 3s linear infinite'
+                  }}
                 >
-                  {animatedText}
+                  {upi.storeName}
                 </motion.p>
               </div>
               <QrCode className="w-6 h-6 text-red-400" />
@@ -252,91 +206,109 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
 
           <div className="p-6">
             {!showQR ? (
-              <motion.form
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-6"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-              >
-                <div className="space-y-2">
-                  <label className="text-sm text-gray-400">Enter Amount</label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                      <IndianRupee className="h-4 w-4 text-gray-400" />
-                    </div>
-                    <Input
-                      type="number"
-                      placeholder="0.00"
-                      step="0.01"
-                      min="0.01"
-                      max="100000"
-                      {...form.register("amount")}
-                      className="pl-9 bg-white/5 border-red-500/20 text-white focus:ring-red-500/30 transition-all duration-300 text-lg font-medium"
-                    />
+              <motion.div className="space-y-6">
+                {/* Trust Badges */}
+                <div className="grid grid-cols-3 gap-4 mb-6">
+                  <div className="flex flex-col items-center p-3 bg-white/5 rounded-lg">
+                    <Shield className="w-6 h-6 text-green-400 mb-2" />
+                    <span className="text-xs text-gray-400 text-center">Secure</span>
                   </div>
-                  {form.formState.errors.amount && (
-                    <motion.p
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="text-sm text-red-400 mt-1"
-                    >
-                      {form.formState.errors.amount.message}
-                    </motion.p>
-                  )}
-                </div>
-
-                <div className="py-4">
-                  <p className="text-sm text-gray-400 mb-3">Supported Payment Apps</p>
-                  <div className="grid grid-cols-3 gap-4 bg-white/5 p-4 rounded-lg">
-                    <motion.div
-                      whileHover={{ scale: 1.1 }}
-                      className="flex flex-col items-center gap-2"
-                    >
-                      <SiGooglepay className="w-12 h-12 text-white/80 hover:text-white transition-colors" />
-                      <span className="text-xs text-gray-400">Google Pay</span>
-                    </motion.div>
-                    <motion.div
-                      whileHover={{ scale: 1.1 }}
-                      className="flex flex-col items-center gap-2"
-                    >
-                      <SiPhonepe className="w-12 h-12 text-white/80 hover:text-white transition-colors" />
-                      <span className="text-xs text-gray-400">PhonePe</span>
-                    </motion.div>
-                    <motion.div
-                      whileHover={{ scale: 1.1 }}
-                      className="flex flex-col items-center gap-2"
-                    >
-                      <SiPaytm className="w-12 h-12 text-white/80 hover:text-white transition-colors" />
-                      <span className="text-xs text-gray-400">Paytm</span>
-                    </motion.div>
+                  <div className="flex flex-col items-center p-3 bg-white/5 rounded-lg">
+                    <Clock className="w-6 h-6 text-blue-400 mb-2" />
+                    <span className="text-xs text-gray-400 text-center">Instant</span>
+                  </div>
+                  <div className="flex flex-col items-center p-3 bg-white/5 rounded-lg">
+                    <Smartphone className="w-6 h-6 text-purple-400 mb-2" />
+                    <span className="text-xs text-gray-400 text-center">Mobile</span>
                   </div>
                 </div>
 
-                <div className="space-y-3 bg-white/5 p-4 rounded-lg">
-                  <p className="text-sm font-medium text-gray-400">Transaction Details</p>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-400">Transaction Limit</span>
-                    <span className="text-white">₹1,00,000</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-400">Processing Fee</span>
-                    <span className="text-green-400">Free</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-400">Settlement Time</span>
-                    <span className="text-white">Instant</span>
-                  </div>
-                </div>
-
-                <Button
-                  type="submit"
-                  className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 transform hover:scale-[1.02] transition-all duration-300"
+                <motion.form
+                  onSubmit={form.handleSubmit(onSubmit)}
+                  className="space-y-6"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
                 >
-                  <ShoppingCart className="w-4 h-4 mr-2" />
-                  Proceed to Pay
-                </Button>
-              </motion.form>
+                  <div className="space-y-2">
+                    <label className="text-sm text-gray-400">Enter Amount</label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                        <IndianRupee className="h-4 w-4 text-gray-400" />
+                      </div>
+                      <Input
+                        type="number"
+                        placeholder="0.00"
+                        step="0.01"
+                        min="0.01"
+                        max="100000"
+                        {...form.register("amount")}
+                        className="pl-9 bg-white/5 border-red-500/20 text-white focus:ring-red-500/30 transition-all duration-300 text-lg font-medium"
+                      />
+                    </div>
+                    {form.formState.errors.amount && (
+                      <motion.p
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="text-sm text-red-400 mt-1"
+                      >
+                        {form.formState.errors.amount.message}
+                      </motion.p>
+                    )}
+                  </div>
+
+                  <div className="py-4">
+                    <p className="text-sm text-gray-400 mb-3">Supported Payment Apps</p>
+                    <div className="grid grid-cols-3 gap-4 bg-white/5 p-4 rounded-lg">
+                      <motion.div
+                        whileHover={{ scale: 1.1 }}
+                        className="flex flex-col items-center gap-2"
+                      >
+                        <SiGooglepay className="w-12 h-12 text-white/80 hover:text-white transition-colors" />
+                        <span className="text-xs text-gray-400">Google Pay</span>
+                      </motion.div>
+                      <motion.div
+                        whileHover={{ scale: 1.1 }}
+                        className="flex flex-col items-center gap-2"
+                      >
+                        <SiPhonepe className="w-12 h-12 text-white/80 hover:text-white transition-colors" />
+                        <span className="text-xs text-gray-400">PhonePe</span>
+                      </motion.div>
+                      <motion.div
+                        whileHover={{ scale: 1.1 }}
+                        className="flex flex-col items-center gap-2"
+                      >
+                        <SiPaytm className="w-12 h-12 text-white/80 hover:text-white transition-colors" />
+                        <span className="text-xs text-gray-400">Paytm</span>
+                      </motion.div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3 bg-white/5 p-4 rounded-lg">
+                    <p className="text-sm font-medium text-gray-400">Transaction Details</p>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-400">Transaction Limit</span>
+                      <span className="text-white">₹1,00,000</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-400">Processing Fee</span>
+                      <span className="text-green-400">Free</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-400">Settlement Time</span>
+                      <span className="text-white">Instant</span>
+                    </div>
+                  </div>
+
+                  <Button
+                    type="submit"
+                    className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 transform hover:scale-[1.02] transition-all duration-300"
+                  >
+                    <ShoppingCart className="w-4 h-4 mr-2" />
+                    Proceed to Pay
+                  </Button>
+                </motion.form>
+              </motion.div>
             ) : (
               <motion.div
                 className="space-y-6"
@@ -486,6 +458,30 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
       </motion.div>
     </AnimatePresence>
   );
+};
+
+const copyUpiLink = () => {
+  if (upiLink) {
+    navigator.clipboard.writeText(upiLink);
+    toast({
+      description: "Payment link copied to clipboard",
+    });
+  } else {
+    toast({
+      title: "Error",
+      description: "Unable to copy payment link. Please try again.",
+      variant: "destructive",
+    });
+  }
+};
+
+const formatAmount = (amount: string) => {
+  return new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(parseFloat(amount));
 };
 
 export default PaymentCard;
