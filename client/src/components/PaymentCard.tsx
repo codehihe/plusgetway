@@ -373,18 +373,12 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
                     variant="outline"
                     className="border-red-500/20 text-red-400 hover:bg-red-500/10 transition-all duration-300"
                     onClick={() => {
-                      if (upiLink) {
-                        navigator.clipboard.writeText(upiLink);
-                        toast({
-                          description: "Payment link copied to clipboard",
-                        });
-                      } else {
-                        toast({
-                          title: "Error",
-                          description: "Unable to copy payment link. Please try again.",
-                          variant: "destructive",
-                        });
-                      }
+                      const amount = form.getValues("amount");
+                      const paymentLink = `upi://pay?pa=${upi.upiId}&pn=${encodeURIComponent(upi.merchantName)}&am=${amount}&cu=INR`;
+                      navigator.clipboard.writeText(paymentLink);
+                      toast({
+                        description: "Payment link copied to clipboard",
+                      });
                     }}
                   >
                     <Copy className="w-4 h-4 mr-2" />
@@ -394,8 +388,9 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
                     variant="outline"
                     className="border-red-500/20 text-red-400 hover:bg-red-500/10 transition-all duration-300"
                     onClick={() => {
-                      const link = `upi://pay?pa=${upi.upiId}&pn=${encodeURIComponent(upi.merchantName)}`;
-                      window.open(link, '_blank');
+                      const amount = form.getValues("amount");
+                      const paymentLink = `upi://pay?pa=${upi.upiId}&pn=${encodeURIComponent(upi.merchantName)}&am=${amount}&cu=INR`;
+                      window.open(paymentLink, '_blank');
                     }}
                   >
                     <ExternalLink className="w-4 h-4 mr-2" />
