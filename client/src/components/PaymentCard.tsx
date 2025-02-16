@@ -222,7 +222,9 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
                     animation: 'gradient 3s linear infinite'
                   }}
                 >
-                  {upi.storeName}
+                  <span className="bg-gradient-to-r from-red-300 via-purple-400 to-red-500 animate-gradient bg-clip-text text-transparent bg-[length:200%_auto]">
+            {upi.storeName}
+          </span>
                 </motion.p>
               </div>
               <QrCode className="w-6 h-6 text-red-400" />
