@@ -142,6 +142,39 @@ export default function Home() {
         </div>
       </div>
 
+      {/* New Section: Payment Process Steps */}
+      <motion.div 
+        className="max-w-6xl mx-auto px-4 mb-16"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+      >
+        <h2 className="text-3xl font-bold text-center text-red-400 mb-12">How It Works</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="relative p-6 bg-white/5 rounded-lg border border-red-500/20">
+            <div className="absolute -top-4 left-4 w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white font-bold">
+              1
+            </div>
+            <h3 className="text-xl font-semibold text-red-400 mt-4 mb-3">Enter Amount</h3>
+            <p className="text-gray-400">Simply enter the payment amount you wish to transfer</p>
+          </div>
+          <div className="relative p-6 bg-white/5 rounded-lg border border-red-500/20">
+            <div className="absolute -top-4 left-4 w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white font-bold">
+              2
+            </div>
+            <h3 className="text-xl font-semibold text-red-400 mt-4 mb-3">Scan QR Code</h3>
+            <p className="text-gray-400">Use any UPI app to scan the generated QR code</p>
+          </div>
+          <div className="relative p-6 bg-white/5 rounded-lg border border-red-500/20">
+            <div className="absolute -top-4 left-4 w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white font-bold">
+              3
+            </div>
+            <h3 className="text-xl font-semibold text-red-400 mt-4 mb-3">Confirm Payment</h3>
+            <p className="text-gray-400">Verify and confirm the payment in your UPI app</p>
+          </div>
+        </div>
+      </motion.div>
+
       <div className="max-w-lg mx-auto px-4 pb-12">
 
         {/* Features Grid */}
@@ -355,6 +388,61 @@ export default function Home() {
                   Round-the-clock assistance for all your payment needs
                 </p>
               </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* New Section: Trust Badges */}
+        <motion.div
+          className="max-w-6xl mx-auto px-4 mb-16"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+        >
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div className="p-6 bg-white/5 rounded-lg border border-red-500/20 text-center">
+              <motion.div
+                className="text-4xl font-bold text-red-400 mb-2"
+                initial={{ scale: 0.5 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
+                100%
+              </motion.div>
+              <p className="text-gray-400">Secure Transactions</p>
+            </div>
+            <div className="p-6 bg-white/5 rounded-lg border border-red-500/20 text-center">
+              <motion.div
+                className="text-4xl font-bold text-red-400 mb-2"
+                initial={{ scale: 0.5 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
+                24/7
+              </motion.div>
+              <p className="text-gray-400">Customer Support</p>
+            </div>
+            <div className="p-6 bg-white/5 rounded-lg border border-red-500/20 text-center">
+              <motion.div
+                className="text-4xl font-bold text-red-400 mb-2"
+                initial={{ scale: 0.5 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
+                0%
+              </motion.div>
+              <p className="text-gray-400">Transaction Fees</p>
+            </div>
+            <div className="p-6 bg-white/5 rounded-lg border border-red-500/20 text-center">
+              <motion.div
+                className="text-4xl font-bold text-red-400 mb-2"
+                initial={{ scale: 0.5 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
+                1M+
+              </motion.div>
+              <p className="text-gray-400">Happy Customers</p>
             </div>
           </div>
         </motion.div>

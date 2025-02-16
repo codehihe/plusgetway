@@ -35,11 +35,6 @@ const generateUpiLink = (upi: UpiId, amount: string, reference: string) => {
       return null;
     }
 
-    if (upi.blockedAt || upi.deletedAt || !upi.isActive) {
-      console.error("UPI ID is not active");
-      return null;
-    }
-
     const parsedAmount = parseFloat(amount);
     if (isNaN(parsedAmount) || parsedAmount <= 0) {
       console.error("Invalid amount for UPI link generation");
@@ -48,26 +43,9 @@ const generateUpiLink = (upi: UpiId, amount: string, reference: string) => {
 
     // Format amount to exactly 2 decimal places
     const cleanAmount = parsedAmount.toFixed(2);
-    // Ensure valid reference by removing special characters
-    const cleanReference = reference.replace(/[^a-zA-Z0-9]/g, '');
-    // Clean and format UPI ID
-    const cleanUpiId = upi.upiId.trim();
-    // Clean merchant name for URL
     const cleanMerchantName = encodeURIComponent(upi.merchantName.trim());
 
-    // Build UPI URL with all required parameters
-    const params = new URLSearchParams({
-      pa: cleanUpiId,           // Payee Address (UPI ID)
-      pn: cleanMerchantName,    // Payee Name
-      am: cleanAmount,          // Amount
-      tr: cleanReference,       // Transaction Reference
-      cu: "INR",               // Currency
-      tn: `Payment to ${cleanMerchantName}`, // Transaction Note
-      mc: "0000",              // Merchant Category Code
-      mode: "04",              // UPI Payment Mode
-    });
-
-    return `upi://pay?${params.toString()}`;
+    return `upi://pay?pa=${upi.upiId}&pn=${cleanMerchantName}&am=${cleanAmount}&tn=Payment_Ref_${reference}&cu=INR&mode=00`;
   } catch (error) {
     console.error("Error generating UPI link:", error);
     return null;
@@ -437,6 +415,7 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
                     )}
                   </div>
 
+                  {/* Moved Proceed to Pay button here */}
                   <Button
                     type="submit"
                     className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 transform hover:scale-[1.02] transition-all duration-300"
@@ -458,6 +437,22 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
                   <div className="flex flex-col items-center p-3 bg-white/5 rounded-lg">
                     <Smartphone className="w-6 h-6 text-purple-400 mb-2" />
                     <span className="text-xs text-gray-400 text-center">Mobile</span>
+                  </div>
+                </div>
+
+                <div className="space-y-3 bg-white/5 p-4 rounded-lg">
+                  <p className="text-sm font-medium text-gray-400">Transaction Details</p>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-400">Transaction Limit</span>
+                    <span className="text-white">₹1,00,000</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-400">Processing Fee</span>
+                    <span className="text-green-400">Free</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-400">Settlement Time</span>
+                    <span className="text-white">Instant</span>
                   </div>
                 </div>
 
@@ -485,22 +480,6 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
                       <SiPaytm className="w-12 h-12 text-white/80 hover:text-white transition-colors" />
                       <span className="text-xs text-gray-400">Paytm</span>
                     </motion.div>
-                  </div>
-                </div>
-
-                <div className="space-y-3 bg-white/5 p-4 rounded-lg">
-                  <p className="text-sm font-medium text-gray-400">Transaction Details</p>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-400">Transaction Limit</span>
-                    <span className="text-white">₹1,00,000</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-400">Processing Fee</span>
-                    <span className="text-green-400">Free</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-400">Settlement Time</span>
-                    <span className="text-white">Instant</span>
                   </div>
                 </div>
               </motion.div>
@@ -577,7 +556,7 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
                       </div>
                     </div>
                   </div>
-                  
+
 
                   <div className="bg-white/5 p-4 rounded-lg space-y-3">
                     <h4 className="text-red-400 font-medium">Transaction Details</h4>
