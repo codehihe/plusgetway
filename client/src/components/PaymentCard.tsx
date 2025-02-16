@@ -80,26 +80,51 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
         try {
           const res = await apiRequest("GET", `/api/transactions/${reference}`);
           const transaction = await res.json();
+          
           if (transaction.status === "success") {
             setPaymentStatus("success");
             clearInterval(statusCheck);
+            clearInterval(timer);
             toast({
-              title: "Payment Successful",
-              description: "Thank you! Your payment has been processed successfully.",
+              title: "✅ Payment Successful",
+              description: `Payment of ${formatAmount(transaction.amount)} received successfully. Transaction ID: ${transaction.reference}`,
+              variant: "default",
+              duration: 5000,
             });
+            // Refresh the page after 3 seconds on success
+            setTimeout(() => {
+              window.location.reload();
+            }, 3000);
           } else if (transaction.status === "failed") {
             setPaymentStatus("failed");
             clearInterval(statusCheck);
+            clearInterval(timer);
             toast({
-              title: "Payment Failed",
-              description: "The payment couldn't be processed. Please try again.",
+              title: "❌ Payment Failed",
+              description: "Transaction failed or was cancelled. Please try again or contact support if the amount was deducted.",
               variant: "destructive",
+              duration: 7000,
+            });
+          } else if (transaction.status === "pending" && timeLeft <= 0) {
+            setPaymentStatus("failed");
+            clearInterval(statusCheck);
+            clearInterval(timer);
+            toast({
+              title: "⚠️ Payment Timeout",
+              description: "Payment session expired. Please try again.",
+              variant: "destructive",
+              duration: 5000,
             });
           }
         } catch (error) {
           console.error("Failed to check payment status:", error);
+          toast({
+            title: "Error",
+            description: "Unable to verify payment status. Please check your transaction history.",
+            variant: "destructive",
+          });
         }
-      }, 5000);
+      }, 3000); // Check every 3 seconds
     }
 
     return () => {
