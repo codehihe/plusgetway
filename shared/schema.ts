@@ -2,13 +2,14 @@ import { pgTable, text, serial, integer, timestamp, boolean, decimal } from "dri
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-// Enhanced UPI IDs table with more merchant details
+// Enhanced UPI IDs table with platform fee
 export const upiIds = pgTable("upi_ids", {
   id: serial("id").primaryKey(),
   upiId: text("upi_id").notNull().unique(),
   merchantName: text("merchant_name").notNull(),
   merchantCategory: text("merchant_category").default('general').notNull(),
   businessType: text("business_type").default('retail').notNull(),
+  platformFeePercentage: decimal("platform_fee_percentage", { precision: 5, scale: 2 }).default("0.50").notNull(),
   dailyLimit: decimal("daily_limit", { precision: 10, scale: 2 }).default("50000.00").notNull(),
   isActive: boolean("is_active").default(true).notNull(),
   blockedAt: timestamp("blocked_at"),
@@ -17,10 +18,11 @@ export const upiIds = pgTable("upi_ids", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-// Enhanced transactions table with better tracking
+// Enhanced transactions table with fee tracking
 export const transactions = pgTable("transactions", {
   id: serial("id").primaryKey(),
   amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  platformFee: decimal("platform_fee", { precision: 10, scale: 2 }).notNull(),
   upiId: text("upi_id").notNull(),
   merchantName: text("merchant_name").notNull(),
   reference: text("reference").notNull(),
@@ -36,16 +38,12 @@ export const transactions = pgTable("transactions", {
   retryCount: integer("retry_count").default(0),
 });
 
-// Audit trail for UPI ID changes
-export const upiAuditLogs = pgTable("upi_audit_logs", {
+// Platform earnings tracking
+export const platformEarnings = pgTable("platform_earnings", {
   id: serial("id").primaryKey(),
-  upiId: integer("upi_id").notNull(),
-  action: text("action").notNull(),
-  oldValues: text("old_values"),
-  newValues: text("new_values"),
+  transactionId: integer("transaction_id").notNull(),
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
   timestamp: timestamp("timestamp").defaultNow().notNull(),
-  actionBy: text("action_by"),
-  ipAddress: text("ip_address"),
 });
 
 // Enhanced validation for UPI ID format
@@ -72,6 +70,10 @@ export const insertUpiSchema = createInsertSchema(upiIds)
       .optional(),
     businessType: z.enum(['retail', 'online', 'wholesale', 'service'])
       .optional(),
+    platformFeePercentage: z.number()
+      .min(0, "Platform fee cannot be negative")
+      .max(5, "Platform fee cannot exceed 5%")
+      .optional(),
     dailyLimit: z.number()
       .min(0, "Daily limit cannot be negative")
       .max(1000000, "Daily limit cannot exceed 10,00,000")
@@ -81,6 +83,7 @@ export const insertUpiSchema = createInsertSchema(upiIds)
 export const insertTransactionSchema = createInsertSchema(transactions)
   .omit({ 
     id: true, 
+    platformFee: true,
     timestamp: true, 
     completedAt: true, 
     failedAt: true, 
@@ -112,5 +115,18 @@ export type InsertUpi = z.infer<typeof insertUpiSchema>;
 export type Transaction = typeof transactions.$inferSelect;
 export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
 export type UpiAuditLog = typeof upiAuditLogs.$inferSelect;
+export type PlatformEarning = typeof platformEarnings.$inferSelect;
 
 export const ADMIN_PIN = "123456";
+
+// Audit trail for UPI ID changes
+export const upiAuditLogs = pgTable("upi_audit_logs", {
+  id: serial("id").primaryKey(),
+  upiId: integer("upi_id").notNull(),
+  action: text("action").notNull(),
+  oldValues: text("old_values"),
+  newValues: text("new_values"),
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+  actionBy: text("action_by"),
+  ipAddress: text("ip_address"),
+});
