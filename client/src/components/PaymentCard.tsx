@@ -11,8 +11,10 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion, AnimatePresence, useAnimation } from "framer-motion";
-import { Timer, AlertTriangle, CheckCircle2, XCircle, IndianRupee, Copy, ExternalLink, Smartphone, ShoppingCart } from "lucide-react";
+import { Timer, AlertTriangle, CheckCircle2, XCircle, IndianRupee, Copy, ExternalLink, 
+  Smartphone, ShoppingCart, QrCode } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { SiGooglepay, SiPhonepe, SiPaytm } from "react-icons/si";
 
 const PAYMENT_TIMEOUT = 180; // 3 minutes in seconds
 
@@ -20,7 +22,8 @@ const paymentSchema = z.object({
   amount: z.string()
     .min(1, "Amount is required")
     .regex(/^\d+(\.\d{1,2})?$/, "Please enter a valid amount")
-    .refine((val) => parseFloat(val) > 0, "Amount must be greater than 0"),
+    .refine((val) => parseFloat(val) > 0, "Amount must be greater than 0")
+    .refine((val) => parseFloat(val) <= 100000, "Amount cannot exceed ₹1,00,000"),
 });
 
 type PaymentFormData = z.infer<typeof paymentSchema>;
@@ -162,6 +165,15 @@ export default function PaymentCard({ upi }: { upi: UpiId }) {
     }
   };
 
+  const formatAmount = (amount: string) => {
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(parseFloat(amount));
+  };
+
   if (upi.blockedAt) {
     return (
       <motion.div
@@ -198,27 +210,29 @@ export default function PaymentCard({ upi }: { upi: UpiId }) {
               animate={{ x: 0 }}
               className="flex items-center justify-between"
             >
-              <h2 className="text-xl font-semibold text-red-400 flex items-center gap-2">
-                <IndianRupee className="w-5 h-5" />
-                <span>{upi.merchantName}</span>
-                <Badge variant="secondary" className="ml-2 bg-red-500/20 text-red-300">
-                  Verified
-                </Badge>
-              </h2>
-              <ShoppingCart className="w-5 h-5 text-red-400" />
+              <div>
+                <h2 className="text-xl font-semibold text-red-400 flex items-center gap-2">
+                  <IndianRupee className="w-5 h-5" />
+                  <span>{upi.merchantName}</span>
+                  <Badge variant="secondary" className="ml-2 bg-red-500/20 text-red-300">
+                    Verified
+                  </Badge>
+                </h2>
+                <p className="text-sm text-gray-400 mt-1 flex items-center gap-2">
+                  {upi.upiId}
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(upi.upiId);
+                      toast({ description: "UPI ID copied to clipboard" });
+                    }}
+                    className="text-red-400 hover:text-red-300 transition-colors"
+                  >
+                    <Copy className="w-4 h-4" />
+                  </button>
+                </p>
+              </div>
+              <QrCode className="w-6 h-6 text-red-400" />
             </motion.div>
-            <p className="text-sm text-gray-400 mt-1 flex items-center gap-2">
-              {upi.upiId}
-              <button
-                onClick={() => {
-                  navigator.clipboard.writeText(upi.upiId);
-                  toast({ description: "UPI ID copied to clipboard" });
-                }}
-                className="text-red-400 hover:text-red-300 transition-colors hover:scale-110 transform duration-200"
-              >
-                <Copy className="w-4 h-4" />
-              </button>
-            </p>
           </div>
 
           {!showQR ? (
@@ -229,18 +243,22 @@ export default function PaymentCard({ upi }: { upi: UpiId }) {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
             >
-              <div className="relative">
-                <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                  <IndianRupee className="h-4 w-4 text-gray-400" />
+              <div className="space-y-2">
+                <label className="text-sm text-gray-400">Enter Amount</label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                    <IndianRupee className="h-4 w-4 text-gray-400" />
+                  </div>
+                  <Input
+                    type="number"
+                    placeholder="0.00"
+                    step="0.01"
+                    min="0.01"
+                    max="100000"
+                    {...form.register("amount")}
+                    className="pl-9 bg-white/5 border-red-500/20 text-white focus:ring-red-500/30 transition-all duration-300 text-lg font-medium"
+                  />
                 </div>
-                <Input
-                  type="number"
-                  placeholder="Enter amount"
-                  step="0.01"
-                  min="0.01"
-                  {...form.register("amount")}
-                  className="pl-9 bg-white/5 border-red-500/20 text-white focus:ring-red-500/30 transition-all duration-300"
-                />
                 {form.formState.errors.amount && (
                   <motion.p 
                     initial={{ opacity: 0, y: -10 }}
@@ -251,6 +269,16 @@ export default function PaymentCard({ upi }: { upi: UpiId }) {
                   </motion.p>
                 )}
               </div>
+
+              <div className="py-4">
+                <p className="text-sm text-gray-400 mb-3">Supported Payment Apps</p>
+                <div className="flex justify-around">
+                  <SiGooglepay className="w-8 h-8 text-white/80" />
+                  <SiPhonepe className="w-8 h-8 text-white/80" />
+                  <SiPaytm className="w-8 h-8 text-white/80" />
+                </div>
+              </div>
+
               <Button 
                 type="submit" 
                 className="w-full bg-red-500 hover:bg-red-600 transform hover:scale-[1.02] transition-all duration-300"
@@ -266,19 +294,16 @@ export default function PaymentCard({ upi }: { upi: UpiId }) {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.3 }}
             >
-              <div className="bg-white p-6 rounded-lg flex flex-col items-center relative overflow-hidden">
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.2 }}
-                  className="absolute inset-0 bg-gradient-to-br from-red-50 to-white opacity-10"
-                />
+              <div className="bg-white p-6 rounded-lg flex flex-col items-center relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-red-50 to-white opacity-10 rounded-lg" />
+
                 {upiLink ? (
                   <>
                     <motion.div
                       initial={{ scale: 0.8, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
                       transition={{ delay: 0.3 }}
+                      className="bg-white p-4 rounded-lg"
                     >
                       <QRCode
                         value={upiLink}
@@ -293,9 +318,12 @@ export default function PaymentCard({ upi }: { upi: UpiId }) {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.4 }}
                     >
-                      <p className="text-black font-medium">Scan with any UPI app</p>
-                      <p className="text-gray-500 text-sm mt-1">
-                        Amount: ₹{parseFloat(form.getValues("amount")).toFixed(2)}
+                      <p className="text-white font-medium">Scan QR with any UPI app</p>
+                      <p className="text-red-400 text-xl font-bold mt-2">
+                        {formatAmount(form.getValues("amount"))}
+                      </p>
+                      <p className="text-gray-400 text-sm mt-1">
+                        To: {upi.merchantName}
                       </p>
                     </motion.div>
                   </>
@@ -311,14 +339,14 @@ export default function PaymentCard({ upi }: { upi: UpiId }) {
               </div>
 
               <motion.div 
-                className="flex gap-2"
+                className="grid grid-cols-2 gap-3"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 }}
               >
                 <Button
                   variant="outline"
-                  className="flex-1 border-red-500/20 text-red-400 hover:bg-red-500/10 transition-all duration-300"
+                  className="border-red-500/20 text-red-400 hover:bg-red-500/10 transition-all duration-300"
                   onClick={copyUpiLink}
                 >
                   <Copy className="w-4 h-4 mr-2" />
@@ -326,16 +354,10 @@ export default function PaymentCard({ upi }: { upi: UpiId }) {
                 </Button>
                 <Button
                   variant="outline"
-                  className="flex-1 border-red-500/20 text-red-400 hover:bg-red-500/10 transition-all duration-300"
+                  className="border-red-500/20 text-red-400 hover:bg-red-500/10 transition-all duration-300"
                   onClick={() => {
                     if (upiLink) {
                       window.open(upiLink, '_blank');
-                    } else {
-                      toast({
-                        title: "Error",
-                        description: "Unable to generate payment link. Please try again.",
-                        variant: "destructive",
-                      });
                     }
                   }}
                 >
@@ -367,7 +389,7 @@ export default function PaymentCard({ upi }: { upi: UpiId }) {
               </motion.div>
 
               <motion.div 
-                className="flex justify-center"
+                className="flex justify-center items-center gap-2"
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.7 }}
@@ -376,8 +398,10 @@ export default function PaymentCard({ upi }: { upi: UpiId }) {
                   <motion.div
                     animate={{ rotate: 360 }}
                     transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                    className="flex items-center gap-2"
                   >
-                    <Timer className="w-6 h-6 text-yellow-500" />
+                    <Timer className="w-5 h-5 text-yellow-500" />
+                    <span className="text-yellow-500">Waiting for payment...</span>
                   </motion.div>
                 )}
                 {paymentStatus === "success" && (
@@ -385,8 +409,10 @@ export default function PaymentCard({ upi }: { upi: UpiId }) {
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ type: "spring" }}
+                    className="flex items-center gap-2"
                   >
-                    <CheckCircle2 className="w-6 h-6 text-green-500" />
+                    <CheckCircle2 className="w-5 h-5 text-green-500" />
+                    <span className="text-green-500">Payment successful!</span>
                   </motion.div>
                 )}
                 {paymentStatus === "failed" && (
@@ -394,8 +420,10 @@ export default function PaymentCard({ upi }: { upi: UpiId }) {
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ type: "spring" }}
+                    className="flex items-center gap-2"
                   >
-                    <XCircle className="w-6 h-6 text-red-500" />
+                    <XCircle className="w-5 h-5 text-red-500" />
+                    <span className="text-red-500">Payment failed</span>
                   </motion.div>
                 )}
               </motion.div>

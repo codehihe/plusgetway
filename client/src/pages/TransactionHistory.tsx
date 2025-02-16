@@ -11,11 +11,14 @@ export default function TransactionHistory() {
     queryKey: ["/api/transactions"],
   });
 
-  const formatAmount = (amount: number) => {
+  const formatAmount = (amount: string | number) => {
+    const numericAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
     return new Intl.NumberFormat("en-IN", {
       style: "currency",
       currency: "INR",
-    }).format(amount);
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(numericAmount);
   };
 
   const getStatusIcon = (status: string) => {
@@ -43,7 +46,7 @@ export default function TransactionHistory() {
 
         <Card className="p-6 backdrop-blur-lg bg-white/10 border-red-500/20">
           {isLoading ? (
-            <div className="text-center text-gray-400">Loading...</div>
+            <div className="text-center text-gray-400">Loading transactions...</div>
           ) : (
             <div className="space-y-4">
               {transactions?.map((tx) => (
@@ -73,8 +76,12 @@ export default function TransactionHistory() {
               ))}
 
               {transactions?.length === 0 && (
-                <div className="text-center text-gray-400">
-                  No transactions found
+                <div className="text-center py-8">
+                  <Clock className="w-12 h-12 text-gray-500 mx-auto mb-4" />
+                  <p className="text-gray-400 text-lg">No transactions found</p>
+                  <p className="text-gray-500 text-sm">
+                    Transactions will appear here once payments are made
+                  </p>
                 </div>
               )}
             </div>
