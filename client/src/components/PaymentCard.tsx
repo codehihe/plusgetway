@@ -100,7 +100,9 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
     if (!reference) return;
 
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const wsUrl = `${protocol}//${window.location.host}/ws`;
+    const host = window.location.host;
+    const wsUrl = `${protocol}//${host}/ws`;
+    console.log("Connecting to WebSocket:", wsUrl);
     const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
 
