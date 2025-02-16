@@ -1,12 +1,17 @@
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { UpiId } from "@shared/schema";
 import UpiForm from "@/components/UpiForm";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Link } from "wouter";
-import { ArrowLeft, Power, Ban, Unlock, History, Trash2, RefreshCw, AlertTriangle, Users, Shield } from "lucide-react";
+import {
+  ArrowLeft, Power, Ban, Unlock, History, Trash2, RefreshCw,
+  AlertTriangle, Users, Shield, Search, TrendingUp, ArrowUpRight
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   AlertDialog,
@@ -18,15 +23,32 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useState } from "react";
 
 export default function AdminPanel() {
   const { toast } = useToast();
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const { data: upiIds, isLoading, refetch } = useQuery<UpiId[]>({
     queryKey: ["/api/upi"],
   });
+
+  // Filter UPIs based on search term
+  const filteredUpiIds = upiIds?.filter(upi => {
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      upi.merchantName.toLowerCase().includes(searchLower) ||
+      upi.upiId.toLowerCase().includes(searchLower) ||
+      upi.merchantCategory?.toLowerCase().includes(searchLower)
+    );
+  });
+
+  const stats = {
+    active: upiIds?.filter(u => u.isActive && !u.deletedAt).length || 0,
+    blocked: upiIds?.filter(u => u.blockedAt).length || 0,
+    total: upiIds?.length || 0,
+    pending: upiIds?.filter(u => !u.blockedAt && !u.deletedAt && !u.isActive).length || 0
+  };
 
   const toggleUpiId = async (id: number) => {
     try {
@@ -100,7 +122,7 @@ export default function AdminPanel() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-950 to-gray-900 p-4">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-6xl mx-auto">
         {/* Enhanced Header Section */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -113,7 +135,7 @@ export default function AdminPanel() {
                 <ArrowLeft className="h-5 w-5 text-red-400" />
               </Button>
             </Link>
-            <h1 className="text-3xl font-bold text-red-500">Admin Panel</h1>
+            <h1 className="text-3xl font-bold text-red-500">Admin Dashboard</h1>
           </div>
           <div className="flex-1" />
           <div className="flex gap-2">
@@ -128,57 +150,81 @@ export default function AdminPanel() {
           </div>
         </motion.div>
 
-        {/* Stats Overview */}
+        {/* Enhanced Stats Overview */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8"
+          className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-8"
         >
-          <Card className="p-4 backdrop-blur-lg bg-white/10 border-red-500/20">
+          <Card className="p-4 backdrop-blur-lg bg-white/10 border-red-500/20 hover:bg-white/20 transition-colors">
             <div className="flex items-center gap-3">
-              <Users className="h-8 w-8 text-red-400" />
+              <div className="p-2 bg-red-500/10 rounded-lg">
+                <Users className="h-8 w-8 text-red-400" />
+              </div>
               <div>
                 <p className="text-sm text-gray-400">Active UPIs</p>
-                <p className="text-2xl font-bold text-red-400">
-                  {upiIds?.filter(u => u.isActive && !u.deletedAt).length || 0}
-                </p>
+                <div className="flex items-center gap-2">
+                  <p className="text-2xl font-bold text-red-400">{stats.active}</p>
+                  <ArrowUpRight className="h-4 w-4 text-green-400" />
+                </div>
               </div>
             </div>
           </Card>
-          <Card className="p-4 backdrop-blur-lg bg-white/10 border-red-500/20">
+
+          <Card className="p-4 backdrop-blur-lg bg-white/10 border-red-500/20 hover:bg-white/20 transition-colors">
             <div className="flex items-center gap-3">
-              <Ban className="h-8 w-8 text-red-400" />
+              <div className="p-2 bg-red-500/10 rounded-lg">
+                <Ban className="h-8 w-8 text-red-400" />
+              </div>
               <div>
                 <p className="text-sm text-gray-400">Blocked</p>
-                <p className="text-2xl font-bold text-red-400">
-                  {upiIds?.filter(u => u.blockedAt).length || 0}
-                </p>
+                <p className="text-2xl font-bold text-red-400">{stats.blocked}</p>
               </div>
             </div>
           </Card>
-          <Card className="p-4 backdrop-blur-lg bg-white/10 border-red-500/20">
+
+          <Card className="p-4 backdrop-blur-lg bg-white/10 border-red-500/20 hover:bg-white/20 transition-colors">
             <div className="flex items-center gap-3">
-              <Shield className="h-8 w-8 text-red-400" />
+              <div className="p-2 bg-red-500/10 rounded-lg">
+                <TrendingUp className="h-8 w-8 text-red-400" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-400">Pending</p>
+                <p className="text-2xl font-bold text-red-400">{stats.pending}</p>
+              </div>
+            </div>
+          </Card>
+
+          <Card className="p-4 backdrop-blur-lg bg-white/10 border-red-500/20 hover:bg-white/20 transition-colors">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-red-500/10 rounded-lg">
+                <Shield className="h-8 w-8 text-red-400" />
+              </div>
               <div>
                 <p className="text-sm text-gray-400">Total UPIs</p>
-                <p className="text-2xl font-bold text-red-400">
-                  {upiIds?.length || 0}
-                </p>
+                <p className="text-2xl font-bold text-red-400">{stats.total}</p>
               </div>
             </div>
           </Card>
         </motion.div>
 
-        {/* Add UPI Form */}
+        {/* Search and Filter Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
+          transition={{ delay: 0.1 }}
+          className="mb-6"
         >
-          <Card className="p-6 mb-8 backdrop-blur-lg bg-white/10 border-red-500/20">
-            <h2 className="text-xl font-semibold text-red-400 mb-4">Add UPI ID</h2>
-            <UpiForm />
-          </Card>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              type="text"
+              placeholder="Search by merchant name, UPI ID, or category..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 bg-white/5 border-red-500/20 text-white placeholder:text-gray-400"
+            />
+          </div>
         </motion.div>
 
         {/* Manage UPI Section */}
@@ -191,12 +237,12 @@ export default function AdminPanel() {
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-semibold text-red-400">Manage UPI IDs</h2>
               <span className="text-sm text-gray-400">
-                {upiIds?.length || 0} UPI IDs
+                {filteredUpiIds?.length || 0} UPI IDs
               </span>
             </div>
 
             {isLoading ? (
-              <motion.div 
+              <motion.div
                 className="grid grid-cols-1 md:grid-cols-2 gap-4 p-8"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -215,7 +261,7 @@ export default function AdminPanel() {
                   </Card>
                 ))}
               </motion.div>
-            ) : upiIds?.length === 0 ? (
+            ) : filteredUpiIds?.length === 0 ? (
               <motion.div
                 className="flex flex-col items-center justify-center p-8 text-gray-400"
                 initial={{ scale: 0.9, opacity: 0 }}
@@ -230,7 +276,7 @@ export default function AdminPanel() {
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <AnimatePresence mode="popLayout">
-                  {upiIds?.map((upi) => (
+                  {filteredUpiIds?.map((upi) => (
                     <motion.div
                       key={upi.id}
                       layout
@@ -239,10 +285,10 @@ export default function AdminPanel() {
                       exit={{ scale: 0.9, opacity: 0 }}
                       transition={{ type: "spring", stiffness: 300, damping: 25 }}
                       className={`rounded-lg overflow-hidden ${
-                        upi.deletedAt 
-                          ? 'bg-gray-950/30 opacity-50' 
-                          : upi.blockedAt 
-                            ? 'bg-red-950/30' 
+                        upi.deletedAt
+                          ? 'bg-gray-950/30 opacity-50'
+                          : upi.blockedAt
+                            ? 'bg-red-950/30'
                             : 'bg-white/5'
                       }`}
                     >
@@ -310,22 +356,44 @@ export default function AdminPanel() {
             )}
           </Card>
         </motion.div>
-      </div>
 
-      <AlertDialog open={deleteId !== null} onOpenChange={() => setDeleteId(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. The UPI ID will be hidden from users but remain visible in the admin panel.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={deleteUpiId}>Delete</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        {/* Add UPI Form */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <Card className="p-6 mb-8 backdrop-blur-lg bg-white/10 border-red-500/20">
+            <h2 className="text-xl font-semibold text-red-400 mb-4">Add UPI ID</h2>
+            <UpiForm />
+          </Card>
+        </motion.div>
+
+
+        {/* Enhanced Delete Dialog */}
+        <AlertDialog open={deleteId !== null} onOpenChange={() => setDeleteId(null)}>
+          <AlertDialogContent className="bg-gray-900 border border-red-500/20">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-red-400">Are you absolutely sure?</AlertDialogTitle>
+              <AlertDialogDescription className="text-gray-400">
+                This action cannot be undone. The UPI ID will be permanently marked as deleted
+                and hidden from users, but will remain visible in the admin panel for audit purposes.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel className="bg-gray-800 text-gray-300 hover:bg-gray-700">
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={deleteUpiId}
+                className="bg-red-500 hover:bg-red-600 text-white"
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
     </div>
   );
 }
