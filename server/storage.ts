@@ -1,6 +1,6 @@
-import { UpiId, InsertUpi, Transaction, InsertTransaction, upiIds, transactions } from "@shared/schema";
+import { UpiId, InsertUpi, Transaction, InsertTransaction, UpiAuditLog, upiIds, transactions, upiAuditLogs } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, isNull } from "drizzle-orm";
+import { eq, desc, isNull, and, gt, lte } from "drizzle-orm";
 import { v4 as uuidv4 } from 'uuid';
 
 export interface IStorage {
@@ -13,6 +13,15 @@ export interface IStorage {
   createTransaction(tx: InsertTransaction): Promise<Transaction>;
   getTransaction(reference: string): Promise<Transaction | undefined>;
   getTransactions(): Promise<Transaction[]>;
+  getDailyTransactions(upiId: string): Promise<Transaction[]>;
+  logUpiAudit(audit: { 
+    upiId: number, 
+    action: string, 
+    oldValues?: any, 
+    newValues?: any,
+    actionBy?: string,
+    ipAddress?: string 
+  }): Promise<UpiAuditLog>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -21,13 +30,19 @@ export class DatabaseStorage implements IStorage {
     if (!includeDeleted) {
       query = query.where(isNull(upiIds.deletedAt));
     }
-    return await query;
+    return await query.orderBy(desc(upiIds.createdAt));
   }
 
   async addUpiId(upi: InsertUpi): Promise<UpiId> {
+    const now = new Date();
     const [upiId] = await db
       .insert(upiIds)
-      .values({ ...upi, isActive: true })
+      .values({ 
+        ...upi, 
+        isActive: true,
+        createdAt: now,
+        updatedAt: now
+      })
       .returning();
     return upiId;
   }
@@ -38,36 +53,80 @@ export class DatabaseStorage implements IStorage {
 
     const [updated] = await db
       .update(upiIds)
-      .set({ isActive: !upi.isActive })
+      .set({ 
+        isActive: !upi.isActive,
+        updatedAt: new Date()
+      })
       .where(eq(upiIds.id, id))
       .returning();
+
+    await this.logUpiAudit({
+      upiId: id,
+      action: updated.isActive ? 'activated' : 'deactivated',
+      oldValues: { isActive: upi.isActive },
+      newValues: { isActive: updated.isActive }
+    });
+
     return updated;
   }
 
   async blockUpiId(id: number): Promise<UpiId> {
+    const now = new Date();
     const [updated] = await db
       .update(upiIds)
-      .set({ blockedAt: new Date() })
+      .set({ 
+        blockedAt: now,
+        updatedAt: now
+      })
       .where(eq(upiIds.id, id))
       .returning();
+
+    await this.logUpiAudit({
+      upiId: id,
+      action: 'blocked',
+      newValues: { blockedAt: now }
+    });
+
     return updated;
   }
 
   async unblockUpiId(id: number): Promise<UpiId> {
+    const now = new Date();
     const [updated] = await db
       .update(upiIds)
-      .set({ blockedAt: null })
+      .set({ 
+        blockedAt: null,
+        updatedAt: now
+      })
       .where(eq(upiIds.id, id))
       .returning();
+
+    await this.logUpiAudit({
+      upiId: id,
+      action: 'unblocked',
+      oldValues: { blockedAt: updated.blockedAt }
+    });
+
     return updated;
   }
 
   async deleteUpiId(id: number): Promise<UpiId> {
+    const now = new Date();
     const [updated] = await db
       .update(upiIds)
-      .set({ deletedAt: new Date() })
+      .set({ 
+        deletedAt: now,
+        updatedAt: now
+      })
       .where(eq(upiIds.id, id))
       .returning();
+
+    await this.logUpiAudit({
+      upiId: id,
+      action: 'deleted',
+      newValues: { deletedAt: now }
+    });
+
     return updated;
   }
 
@@ -98,6 +157,45 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(transactions)
       .orderBy(desc(transactions.timestamp));
+  }
+
+  async getDailyTransactions(upiId: string): Promise<Transaction[]> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    return await db
+      .select()
+      .from(transactions)
+      .where(
+        and(
+          eq(transactions.upiId, upiId),
+          gt(transactions.timestamp, today),
+          lte(transactions.timestamp, tomorrow)
+        )
+      )
+      .orderBy(desc(transactions.timestamp));
+  }
+
+  async logUpiAudit(audit: {
+    upiId: number,
+    action: string,
+    oldValues?: any,
+    newValues?: any,
+    actionBy?: string,
+    ipAddress?: string
+  }): Promise<UpiAuditLog> {
+    const [log] = await db
+      .insert(upiAuditLogs)
+      .values({
+        ...audit,
+        oldValues: audit.oldValues ? JSON.stringify(audit.oldValues) : null,
+        newValues: audit.newValues ? JSON.stringify(audit.newValues) : null,
+        timestamp: new Date()
+      })
+      .returning();
+    return log;
   }
 }
 
