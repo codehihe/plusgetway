@@ -12,7 +12,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion, AnimatePresence } from "framer-motion";
 import { Timer, AlertTriangle, CheckCircle2, XCircle, IndianRupee, ExternalLink,
-  Smartphone, ShoppingCart, QrCode, Shield, Clock, Lock } from "lucide-react";
+  Smartphone, ShoppingCart, QrCode, Shield, Clock, Lock, XOctagon, AlertCircle, RefreshCcw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { SiGooglepay, SiPhonepe, SiPaytm } from "react-icons/si";
 import { getWebSocketUrl } from "@/lib/utils";
@@ -303,28 +303,32 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
       const amount = parseFloat(data.amount);
       if (amount < 1) {
         toast({
-          title: "Invalid Amount",
+          title: "⚠️ Invalid Amount",
           description: "Minimum transaction amount is ₹1",
           variant: "destructive",
         });
         return;
       }
 
-      // Check UPI status
+      // Enhanced validation before transaction
       if (upi.blockedAt) {
+        setPaymentStatus("failed");
         toast({
-          title: "Error",
-          description: "This UPI ID is currently blocked.",
+          title: "❌ Transaction Blocked",
+          description: "This UPI ID is currently blocked by authorities. Please try another payment method.",
           variant: "destructive",
+          duration: 7000,
         });
         return;
       }
 
       if (!upi.isActive || upi.deletedAt) {
+        setPaymentStatus("failed");
         toast({
-          title: "Error",
-          description: "This UPI ID is no longer active.",
+          title: "❌ UPI ID Inactive",
+          description: "This payment method is no longer available. Please contact the merchant.",
           variant: "destructive",
+          duration: 7000,
         });
         return;
       }
@@ -338,6 +342,9 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
 
       if (!res.ok) {
         const errorData = await res.json();
+        if (errorData.code === "BLOCKED_BY_AUTHORITY") {
+          throw new Error("Transaction blocked by authorities for security reasons");
+        }
         throw new Error(errorData.message || "Failed to create transaction");
       }
 
@@ -348,11 +355,24 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
       setShowQR(true);
     } catch (error) {
       console.error("Payment initiation error:", error);
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Unable to initiate payment. Please try again.",
-        variant: "destructive",
-      });
+      setPaymentStatus("failed");
+      const errorMessage = error instanceof Error ? error.message : "Unable to initiate payment";
+
+      if (errorMessage.includes("blocked by authorities")) {
+        toast({
+          title: "❌ Transaction Blocked",
+          description: "For security reasons, sending money from your account for this payment is not permitted.",
+          variant: "destructive",
+          duration: 10000,
+        });
+      } else {
+        toast({
+          title: "❌ Payment Error",
+          description: errorMessage + ". Please try again.",
+          variant: "destructive",
+          duration: 7000,
+        });
+      }
     }
   };
 
@@ -570,12 +590,32 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
                       </motion.div>
                     </>
                   ) : (
-                    <div className="text-center p-4">
-                      <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-2" />
-                      <p className="text-red-500 font-medium">Invalid UPI Configuration</p>
-                      <p className="text-gray-500 text-sm mt-1">
-                        Please contact the administrator
-                      </p>
+                    <div className="text-center p-6 space-y-4">
+                      <div className="bg-red-950/50 p-4 rounded-lg border border-red-500/20">
+                        <XOctagon className="w-16 h-16 text-red-500 mx-auto mb-4 animate-pulse" />
+                        <h3 className="text-xl font-semibold text-red-400 mb-2">
+                          Transaction Blocked
+                        </h3>
+                        <p className="text-gray-400 text-sm mb-4">
+                          For security reasons, sending money from your account for this payment is not permitted.
+                        </p>
+                        <div className="flex flex-col gap-3">
+                          <Button
+                            variant="outline"
+                            className="w-full border-red-500/20 text-red-400 hover:bg-red-500/10"
+                            onClick={() => {
+                              setShowQR(false);
+                              setPaymentStatus("pending");
+                            }}
+                          >
+                            <RefreshCcw className="w-4 h-4 mr-2" />
+                            Try Again
+                          </Button>
+                          <p className="text-xs text-gray-500">
+                            If you believe this is an error, please contact your bank or UPI provider.
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>
