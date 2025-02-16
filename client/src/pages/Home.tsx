@@ -62,7 +62,12 @@ export default function Home() {
           <Card className="p-4 backdrop-blur-lg bg-white/5 border-red-500/20">
             <Shield className="h-8 w-8 text-red-400 mb-2" />
             <h3 className="text-lg font-semibold text-red-400">Secure</h3>
-            <p className="text-sm text-gray-400">End-to-end encrypted transactions</p>
+            <p className="text-sm text-gray-400">End-to-end encrypted transactions with advanced security measures</p>
+            <ul className="text-xs text-gray-500 mt-2 list-disc list-inside">
+              <li>SSL Encryption</li>
+              <li>Real-time monitoring</li>
+              <li>Fraud protection</li>
+            </ul>
           </Card>
           <Card className="p-4 backdrop-blur-lg bg-white/5 border-red-500/20">
             <Smartphone className="h-8 w-8 text-red-400 mb-2" />

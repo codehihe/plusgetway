@@ -233,7 +233,7 @@ export default function PaymentCard({ upi }: { upi: UpiId }) {
                 )}
               </div>
               <Button type="submit" className="w-full bg-red-500 hover:bg-red-600">
-                Generate Payment QR
+                Pay Now
               </Button>
             </form>
           ) : (

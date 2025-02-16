@@ -193,6 +193,7 @@ export default function AdminPanel() {
                       <Button
                         variant="destructive"
                         size="icon"
+                        onClick={() => deleteUpiId(upi.id)}
                         onClick={() => setDeleteId(upi.id)}
                       >
                         <Trash2 className="h-4 w-4" />
