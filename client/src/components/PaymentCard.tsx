@@ -141,11 +141,18 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
 
     ws.onerror = (error) => {
       console.error('WebSocket error:', error);
-      setWsConnected(false);
+      // Attempt to reconnect after a delay
+      setTimeout(() => {
+        setupWebSocket();
+      }, 3000);
     };
 
     ws.onclose = () => {
-      setWsConnected(false);
+      console.log('WebSocket connection closed');
+      // Attempt to reconnect after a delay
+      setTimeout(() => {
+        setupWebSocket();
+      }, 3000);
     };
 
     return () => {
