@@ -11,8 +11,8 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion, AnimatePresence } from "framer-motion";
-import { Timer, AlertTriangle, CheckCircle2, XCircle, IndianRupee, Copy, ExternalLink,
-  Smartphone, ShoppingCart, QrCode, Shield, Clock } from "lucide-react";
+import { Timer, AlertTriangle, CheckCircle2, XCircle, IndianRupee, ExternalLink,
+  Smartphone, ShoppingCart, QrCode, Shield, Clock, Lock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { SiGooglepay, SiPhonepe, SiPaytm } from "react-icons/si";
 
