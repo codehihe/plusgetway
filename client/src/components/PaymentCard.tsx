@@ -15,6 +15,7 @@ import { Timer, AlertTriangle, CheckCircle2, XCircle, IndianRupee, ExternalLink,
   Smartphone, ShoppingCart, QrCode, Shield, Clock, Lock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { SiGooglepay, SiPhonepe, SiPaytm } from "react-icons/si";
+import { getWebSocketUrl } from "@/lib/utils";
 
 const PAYMENT_TIMEOUT = 180; // 3 minutes in seconds
 
@@ -99,70 +100,89 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
   const setupWebSocket = useCallback(() => {
     if (!reference) return;
 
-    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const host = window.location.host;
-    const wsUrl = `${protocol}//${host}/ws`;
+    const wsUrl = getWebSocketUrl();
     console.log("Connecting to WebSocket:", wsUrl);
-    const ws = new WebSocket(wsUrl);
-    wsRef.current = ws;
 
-    ws.onopen = () => {
-      setWsConnected(true);
-      ws.send(JSON.stringify({ type: 'subscribe', reference }));
-    };
+    try {
+      const ws = new WebSocket(wsUrl);
+      wsRef.current = ws;
 
-    ws.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        if (data.type === 'payment_status' && data.reference === reference) {
-          if (data.status === 'success') {
-            setPaymentStatus('success');
-            toast({
-              title: "✅ Payment Successful",
-              description: `Payment of ${formatAmount(form.getValues("amount"))} received successfully. Transaction ID: ${reference}`,
-              variant: "default",
-              duration: 5000,
-            });
-            setTimeout(() => {
-              window.location.reload();
-            }, 3000);
-          } else if (data.status === 'failed') {
-            setPaymentStatus('failed');
-            toast({
-              title: "❌ Payment Failed",
-              description: "Transaction failed or was cancelled. Please try again or contact support if the amount was deducted.",
-              variant: "destructive",
-              duration: 7000,
-            });
+      ws.onopen = () => {
+        console.log('WebSocket connection established');
+        setWsConnected(true);
+        ws.send(JSON.stringify({ type: 'subscribe', reference }));
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          console.log('WebSocket message received:', data);
+
+          if (data.type === 'connected') {
+            console.log('Successfully connected to payment server');
+          } else if (data.type === 'payment_status' && data.reference === reference) {
+            if (data.status === 'success') {
+              setPaymentStatus('success');
+              toast({
+                title: "✅ Payment Successful",
+                description: `Payment of ${formatAmount(form.getValues("amount"))} received successfully. Transaction ID: ${reference}`,
+                variant: "default",
+                duration: 5000,
+              });
+              setTimeout(() => {
+                window.location.reload();
+              }, 3000);
+            } else if (data.status === 'failed') {
+              setPaymentStatus('failed');
+              toast({
+                title: "❌ Payment Failed",
+                description: "Transaction failed or was cancelled. Please try again or contact support if the amount was deducted.",
+                variant: "destructive",
+                duration: 7000,
+              });
+            }
           }
+        } catch (error) {
+          console.error('WebSocket message parsing error:', error);
         }
-      } catch (error) {
-        console.error('WebSocket message parsing error:', error);
-      }
-    };
+      };
 
-    ws.onerror = (error) => {
-      console.error('WebSocket error:', error);
-      // Attempt to reconnect after a delay
-      setTimeout(() => {
-        setupWebSocket();
-      }, 3000);
-    };
+      ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
+        setWsConnected(false);
+        toast({
+          title: "Connection Error",
+          description: "Unable to establish real-time connection. Payment status updates may be delayed.",
+          variant: "destructive",
+        });
+      };
 
-    ws.onclose = () => {
-      console.log('WebSocket connection closed');
-      // Attempt to reconnect after a delay
-      setTimeout(() => {
-        setupWebSocket();
-      }, 3000);
-    };
+      ws.onclose = () => {
+        console.log('WebSocket connection closed');
+        setWsConnected(false);
+        // Attempt to reconnect after a delay
+        setTimeout(() => {
+          if (timeLeft > 0) {
+            setupWebSocket();
+          }
+        }, 3000);
+      };
 
-    return () => {
-      if (ws.readyState === WebSocket.OPEN) {
-        ws.close();
-      }
-    };
-  }, [reference, toast, form]);
+      return () => {
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.close();
+        }
+      };
+    } catch (error) {
+      console.error('Error setting up WebSocket:', error);
+      toast({
+        title: "Connection Error",
+        description: "Unable to establish real-time connection. Payment status updates may be delayed.",
+        variant: "destructive",
+      });
+      return undefined;
+    }
+  }, [reference, toast, form, timeLeft]);
 
   // Fallback polling mechanism
   useEffect(() => {

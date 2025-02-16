@@ -1,4 +1,4 @@
-import { WebSocketServer, WebSocket } from 'ws';
+import { WebSocketServer as WS, WebSocket } from 'ws';
 import { Server } from 'http';
 
 interface WebSocketClient extends WebSocket {
@@ -6,11 +6,11 @@ interface WebSocketClient extends WebSocket {
 }
 
 export const setupWebSocketServer = (server: Server) => {
-  const wss = new WebSocketServer({ 
-  server,
-  path: '/ws',
-  clientTracking: true 
-});
+  const wss = new WS({ 
+    server,
+    path: '/ws',
+    clientTracking: true 
+  });
   const clients = new Map<string, Set<WebSocketClient>>();
 
   wss.on('connection', (ws: WebSocketClient) => {
@@ -93,4 +93,4 @@ export const setupWebSocketServer = (server: Server) => {
   return { broadcastPaymentUpdate };
 };
 
-export type WebSocketServer = ReturnType<typeof setupWebSocketServer>;
+export type WebSocketServerType = ReturnType<typeof setupWebSocketServer>;
