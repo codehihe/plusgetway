@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { UpiId } from "@shared/schema";
 import UpiForm from "@/components/UpiForm";
@@ -6,13 +7,25 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Link } from "wouter";
-import { ArrowLeft, Power, Ban, Unlock, History } from "lucide-react";
+import { ArrowLeft, Power, Ban, Unlock, History, Trash2, RefreshCw, AlertTriangle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useState } from "react";
 
 export default function AdminPanel() {
   const { toast } = useToast();
+  const [deleteId, setDeleteId] = useState<number | null>(null);
 
-  const { data: upiIds, isLoading } = useQuery<UpiId[]>({
+  const { data: upiIds, isLoading, refetch } = useQuery<UpiId[]>({
     queryKey: ["/api/upi"],
   });
 
@@ -67,6 +80,25 @@ export default function AdminPanel() {
     }
   };
 
+  const deleteUpiId = async () => {
+    if (!deleteId) return;
+    try {
+      await apiRequest("DELETE", `/api/upi/${deleteId}`);
+      queryClient.invalidateQueries({ queryKey: ["/api/upi"] });
+      toast({
+        title: "Success",
+        description: "UPI ID deleted successfully",
+      });
+      setDeleteId(null);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete UPI ID",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-950 to-gray-900 p-4">
       <div className="max-w-lg mx-auto">
@@ -78,6 +110,9 @@ export default function AdminPanel() {
           </Link>
           <h1 className="text-3xl font-bold text-red-500">Admin Panel</h1>
           <div className="flex-1" />
+          <Button variant="ghost" size="icon" onClick={() => refetch()}>
+            <RefreshCw className="h-5 w-5 text-red-400" />
+          </Button>
           <Link href="/admin/transactions">
             <Button variant="ghost" size="icon">
               <History className="h-5 w-5 text-red-400" />
@@ -91,9 +126,22 @@ export default function AdminPanel() {
         </Card>
 
         <Card className="p-6 backdrop-blur-lg bg-white/10 border-red-500/20">
-          <h2 className="text-xl font-semibold text-red-400 mb-4">Manage UPI IDs</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold text-red-400">Manage UPI IDs</h2>
+            <span className="text-sm text-gray-400">
+              {upiIds?.length || 0} UPI IDs
+            </span>
+          </div>
+          
           {isLoading ? (
-            <div>Loading...</div>
+            <div className="flex items-center justify-center p-8">
+              <RefreshCw className="h-6 w-6 text-red-400 animate-spin" />
+            </div>
+          ) : upiIds?.length === 0 ? (
+            <div className="flex flex-col items-center justify-center p-8 text-gray-400">
+              <AlertTriangle className="h-8 w-8 mb-2" />
+              <p>No UPI IDs found</p>
+            </div>
           ) : (
             <div className="space-y-4">
               <AnimatePresence>
@@ -142,6 +190,13 @@ export default function AdminPanel() {
                           <Unlock className="h-4 w-4" />
                         </Button>
                       )}
+                      <Button
+                        variant="destructive"
+                        size="icon"
+                        onClick={() => setDeleteId(upi.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
                   </motion.div>
                 ))}
@@ -150,6 +205,21 @@ export default function AdminPanel() {
           )}
         </Card>
       </div>
+
+      <AlertDialog open={deleteId !== null} onOpenChange={() => setDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the UPI ID.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={deleteUpiId}>Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

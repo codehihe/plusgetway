@@ -48,6 +48,12 @@ export async function registerRoutes(app: Express) {
     res.json(upiId);
   });
 
+  app.delete("/api/upi/:id", async (req, res) => {
+    const id = parseInt(req.params.id);
+    await storage.deleteUpiId(id);
+    res.json({ success: true });
+  });
+
   app.get("/api/transactions", async (req, res) => {
     const transactions = await storage.getTransactions();
     res.json(transactions);

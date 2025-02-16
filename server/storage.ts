@@ -8,6 +8,7 @@ export interface IStorage {
   toggleUpiId(id: number): Promise<UpiId>;
   blockUpiId(id: number): Promise<UpiId>;
   unblockUpiId(id: number): Promise<UpiId>;
+  deleteUpiId(id: number): Promise<void>;
   createTransaction(tx: InsertTransaction): Promise<Transaction>;
   getTransaction(reference: string): Promise<Transaction | undefined>;
   getTransactions(): Promise<Transaction[]>;
@@ -54,6 +55,10 @@ export class DatabaseStorage implements IStorage {
       .where(eq(upiIds.id, id))
       .returning();
     return updated;
+  }
+
+  async deleteUpiId(id: number): Promise<void> {
+    await db.delete(upiIds).where(eq(upiIds.id, id));
   }
 
   async createTransaction(tx: InsertTransaction): Promise<Transaction> {
