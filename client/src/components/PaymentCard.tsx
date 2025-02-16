@@ -11,7 +11,7 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion, AnimatePresence } from "framer-motion";
-import { Timer, AlertTriangle, CheckCircle2, XCircle } from "lucide-react";
+import { Timer, AlertTriangle, CheckCircle2, XCircle, IndianRupee, Copy, ExternalLink } from "lucide-react";
 
 const PAYMENT_TIMEOUT = 180; // 3 minutes in seconds
 
@@ -22,12 +22,17 @@ const paymentSchema = z.object({
 type PaymentFormData = z.infer<typeof paymentSchema>;
 
 const generateUpiLink = (upi: UpiId, amount: string, reference: string) => {
+  // Ensure proper formatting of amount and reference
+  const cleanAmount = parseFloat(amount).toFixed(2);
+  const cleanReference = reference.replace(/[^a-zA-Z0-9]/g, '');
+
   const params = new URLSearchParams({
-    pa: upi.upiId,
-    pn: upi.merchantName,
-    am: amount,
-    tr: reference,
+    pa: upi.upiId.trim(),
+    pn: upi.merchantName.trim(),
+    am: cleanAmount,
+    tr: cleanReference,
     cu: "INR",
+    tn: `Payment to ${upi.merchantName}`,
   });
   return `upi://pay?${params.toString()}`;
 };
@@ -64,14 +69,14 @@ export default function PaymentCard({ upi }: { upi: UpiId }) {
             clearInterval(statusCheck);
             toast({
               title: "Payment Successful",
-              description: "Your payment has been processed successfully.",
+              description: "Thank you! Your payment has been processed successfully.",
             });
           } else if (transaction.status === "failed") {
             setPaymentStatus("failed");
             clearInterval(statusCheck);
             toast({
               title: "Payment Failed",
-              description: "Please try again or contact support.",
+              description: "The payment couldn't be processed. Please try again.",
               variant: "destructive",
             });
           }
@@ -92,8 +97,8 @@ export default function PaymentCard({ upi }: { upi: UpiId }) {
       setShowQR(false);
       setPaymentStatus("failed");
       toast({
-        title: "Payment Timeout",
-        description: "The payment session has expired. Please try again.",
+        title: "Session Expired",
+        description: "The payment session has timed out. Please start again.",
         variant: "destructive",
       });
     }
@@ -115,13 +120,20 @@ export default function PaymentCard({ upi }: { upi: UpiId }) {
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to create payment. Please try again.",
+        description: "Unable to initiate payment. Please try again.",
         variant: "destructive",
       });
     }
   };
 
   const upiLink = showQR ? generateUpiLink(upi, form.getValues("amount"), reference) : "";
+
+  const copyUpiLink = () => {
+    navigator.clipboard.writeText(upiLink);
+    toast({
+      description: "Payment link copied to clipboard",
+    });
+  };
 
   if (upi.blockedAt) {
     return (
@@ -135,7 +147,7 @@ export default function PaymentCard({ upi }: { upi: UpiId }) {
             <AlertTriangle className="w-8 h-8" />
             <div>
               <h2 className="text-xl font-semibold">Account Blocked</h2>
-              <p className="text-sm text-gray-400">This UPI ID is currently blocked</p>
+              <p className="text-sm text-gray-400">This UPI ID is currently unavailable</p>
             </div>
           </div>
         </Card>
@@ -151,19 +163,36 @@ export default function PaymentCard({ upi }: { upi: UpiId }) {
         exit={{ scale: 0.9, opacity: 0 }}
       >
         <Card className="p-6 backdrop-blur-lg bg-white/10 border-red-500/20 mb-4">
-          <div className="mb-4">
-            <h2 className="text-xl font-semibold text-red-400">{upi.merchantName}</h2>
-            <p className="text-sm text-gray-400">{upi.upiId}</p>
+          <div className="mb-6">
+            <h2 className="text-xl font-semibold text-red-400 flex items-center gap-2">
+              <IndianRupee className="w-5 h-5" />
+              {upi.merchantName}
+            </h2>
+            <p className="text-sm text-gray-400 mt-1 flex items-center gap-2">
+              {upi.upiId}
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(upi.upiId);
+                  toast({ description: "UPI ID copied to clipboard" });
+                }}
+                className="text-red-400 hover:text-red-300 transition-colors"
+              >
+                <Copy className="w-4 h-4" />
+              </button>
+            </p>
           </div>
 
           {!showQR ? (
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <div>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                  <IndianRupee className="h-4 w-4 text-gray-400" />
+                </div>
                 <Input
                   type="number"
                   placeholder="Enter amount"
                   {...form.register("amount")}
-                  className="bg-white/5 border-red-500/20 text-white"
+                  className="pl-9 bg-white/5 border-red-500/20 text-white"
                 />
                 {form.formState.errors.amount && (
                   <p className="text-sm text-red-400 mt-1">
@@ -172,20 +201,45 @@ export default function PaymentCard({ upi }: { upi: UpiId }) {
                 )}
               </div>
               <Button type="submit" className="w-full bg-red-500 hover:bg-red-600">
-                Pay Now
+                Generate Payment QR
               </Button>
             </form>
           ) : (
-            <div className="space-y-4">
-              <div className="bg-white p-4 rounded-lg">
-                <QRCode value={upiLink} className="w-full h-auto" />
+            <div className="space-y-6">
+              <div className="bg-white p-6 rounded-lg flex flex-col items-center">
+                <QRCode 
+                  value={upiLink} 
+                  size={200}
+                  level="H"
+                  className="w-full h-auto"
+                />
+                <p className="text-black text-sm mt-4">Scan with any UPI app</p>
+              </div>
+
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  className="flex-1 border-red-500/20 text-red-400"
+                  onClick={copyUpiLink}
+                >
+                  <Copy className="w-4 h-4 mr-2" />
+                  Copy Link
+                </Button>
+                <Button
+                  variant="outline"
+                  className="flex-1 border-red-500/20 text-red-400"
+                  onClick={() => window.open(upiLink, '_blank')}
+                >
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  Open in App
+                </Button>
               </div>
 
               <div className="space-y-2">
                 <div className="flex justify-between text-sm text-gray-400">
                   <div className="flex items-center gap-2">
                     <Timer className="w-4 h-4" />
-                    <span>Time remaining</span>
+                    <span>Session expires in</span>
                   </div>
                   <span>{Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}</span>
                 </div>
@@ -214,7 +268,7 @@ export default function PaymentCard({ upi }: { upi: UpiId }) {
                 className="w-full border-red-500/20 text-red-400"
                 onClick={() => setShowQR(false)}
               >
-                Cancel
+                Cancel Payment
               </Button>
             </div>
           )}
