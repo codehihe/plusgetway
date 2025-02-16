@@ -35,15 +35,15 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-950 to-gray-900">
+    <div className="min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-red-950 via-gray-900 to-black">
       {/* Hero Section */}
       <div className="w-full px-4 py-12 md:py-24">
         <div className="max-w-4xl mx-auto text-center">
           <motion.h1 
-            className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-red-400 to-red-600 bg-clip-text text-transparent mb-6"
+            className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-red-300 via-red-500 to-red-700 bg-clip-text text-transparent mb-6"
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
+            transition={{ duration: 0.5, type: "spring", bounce: 0.4 }}
           >
             Secure UPI Payments
           </motion.h1>
@@ -76,8 +76,13 @@ export default function Home() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
           >
-            <Card className="bg-white/5 border-red-500/20 p-6 flex flex-col items-center space-y-4">
-              <SiGooglepay className="w-16 h-16 text-white/80" />
+            <Card className="bg-white/5 border-red-500/20 p-6 flex flex-col items-center space-y-4 hover:bg-white/10 transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-red-500/10">
+              <motion.div
+                whileHover={{ rotate: 360 }}
+                transition={{ duration: 0.5 }}
+              >
+                <SiGooglepay className="w-16 h-16 text-white/80" />
+              </motion.div>
               <h3 className="text-lg font-medium text-red-400">Google Pay</h3>
               <p className="text-sm text-gray-400 text-center">Quick and secure payments through Google Pay</p>
             </Card>
@@ -232,9 +237,15 @@ export default function Home() {
           transition={{ delay: 0.25 }}
           className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16"
         >
-          <Card className="bg-white/5 border-red-500/20 p-6 text-center">
-            <h3 className="text-3xl font-bold text-red-400">99.9%</h3>
-            <p className="text-gray-400 mt-2">Uptime Guarantee</p>
+          <Card className="bg-white/5 border-red-500/20 p-8 text-center hover:bg-white/10 transition-all duration-300 transform hover:scale-105">
+            <motion.h3 
+              className="text-4xl font-bold bg-gradient-to-r from-red-300 to-red-500 bg-clip-text text-transparent"
+              whileHover={{ scale: 1.1 }}
+              transition={{ type: "spring", stiffness: 300 }}
+            >
+              99.9%
+            </motion.h3>
+            <p className="text-gray-400 mt-3 font-medium">Uptime Guarantee</p>
           </Card>
           <Card className="bg-white/5 border-red-500/20 p-6 text-center">
             <h3 className="text-3xl font-bold text-red-400">10M+</h3>
