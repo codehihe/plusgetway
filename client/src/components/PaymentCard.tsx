@@ -23,7 +23,7 @@ const paymentSchema = z.object({
   amount: z.string()
     .min(1, "Amount is required")
     .regex(/^\d+(\.\d{1,2})?$/, "Please enter a valid amount")
-    .refine((val) => parseFloat(val) >= 10, "Minimum amount is ₹10")
+    .refine((val) => parseFloat(val) >= 1, "Minimum amount is ₹1")
     .refine((val) => parseFloat(val) <= 100000, "Amount cannot exceed ₹1,00,000"),
 });
 
@@ -37,7 +37,7 @@ const generateUpiLink = (upi: UpiId, amount: string, reference: string) => {
     }
 
     const parsedAmount = parseFloat(amount);
-    if (isNaN(parsedAmount) || parsedAmount < 10) {
+    if (isNaN(parsedAmount) || parsedAmount < 1) {
       console.error("Invalid amount for UPI link generation");
       return null;
     }
@@ -46,16 +46,14 @@ const generateUpiLink = (upi: UpiId, amount: string, reference: string) => {
     const cleanMerchantName = encodeURIComponent(upi.merchantName.trim());
     const cleanReference = encodeURIComponent(reference.trim());
 
-    // Standardized UPI link format with explicit purpose
+    // Standardized UPI link format for better compatibility
     const params = new URLSearchParams({
       pa: upi.upiId.trim(),
       pn: cleanMerchantName,
-      tn: `Payment to ${cleanMerchantName}`,
+      tn: `Payment_${cleanReference}`,
       am: cleanAmount,
       cu: "INR",
-      mode: "04",
       tr: cleanReference,
-      purpose: "00"  // P2M payment
     });
 
     return `upi://pay?${params.toString()}`;
@@ -274,10 +272,10 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
     try {
       // Additional validation for minimum amount
       const amount = parseFloat(data.amount);
-      if (amount < 10) {
+      if (amount < 1) {
         toast({
           title: "Invalid Amount",
-          description: "Minimum transaction amount is ₹10",
+          description: "Minimum transaction amount is ₹1",
           variant: "destructive",
         });
         return;
