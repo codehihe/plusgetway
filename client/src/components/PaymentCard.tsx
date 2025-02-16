@@ -41,11 +41,24 @@ const generateUpiLink = (upi: UpiId, amount: string, reference: string) => {
       return null;
     }
 
-    // Format amount to exactly 2 decimal places
     const cleanAmount = parsedAmount.toFixed(2);
     const cleanMerchantName = encodeURIComponent(upi.merchantName.trim());
+    const cleanReference = encodeURIComponent(reference.trim());
 
-    return `upi://pay?pa=${upi.upiId}&pn=${cleanMerchantName}&am=${cleanAmount}&tn=Payment_Ref_${reference}&cu=INR&mode=00`;
+    // Enhanced UPI link with additional parameters for better compatibility
+    const params = new URLSearchParams({
+      pa: upi.upiId.trim(),          // Payee VPA
+      pn: cleanMerchantName,         // Payee Name
+      tn: `Payment_${cleanReference}`, // Transaction Note
+      tr: cleanReference,            // Transaction Reference
+      am: cleanAmount,               // Amount
+      cu: "INR",                     // Currency
+      mc: "0000",                    // Merchant Code (default)
+      url: "",                       // URL (optional)
+      mode: "00"                     // UPI Payment Mode
+    });
+
+    return `upi://pay?${params.toString()}`;
   } catch (error) {
     console.error("Error generating UPI link:", error);
     return null;
@@ -362,16 +375,16 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
                     Verified
                   </Badge>
                 </h2>
-                <motion.p 
+                <motion.p
                   className="text-sm mt-1 bg-gradient-to-r from-red-400 via-orange-400 to-yellow-400 bg-clip-text text-transparent font-medium animate-gradient"
-                  style={{ 
+                  style={{
                     backgroundSize: '200% auto',
                     animation: 'gradient 3s linear infinite'
                   }}
                 >
                   <span className="bg-gradient-to-r from-red-300 via-purple-400 to-red-500 animate-gradient bg-clip-text text-transparent bg-[length:200%_auto]">
-            {upi.storeName}
-          </span>
+                    {upi.storeName}
+                  </span>
                 </motion.p>
               </div>
               <QrCode className="w-6 h-6 text-red-400" />
@@ -414,18 +427,9 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
                       </motion.p>
                     )}
                   </div>
-
-                  {/* Moved Proceed to Pay button here */}
-                  <Button
-                    type="submit"
-                    className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 transform hover:scale-[1.02] transition-all duration-300"
-                  >
-                    <ShoppingCart className="w-4 h-4 mr-2" />
-                    Proceed to Pay
-                  </Button>
                 </motion.form>
 
-                <div className="grid grid-cols-3 gap-4 mb-6">
+                <div className="grid grid-cols-3 gap-4">
                   <div className="flex flex-col items-center p-3 bg-white/5 rounded-lg">
                     <Shield className="w-6 h-6 text-green-400 mb-2" />
                     <span className="text-xs text-gray-400 text-center">Secure</span>
@@ -439,6 +443,16 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
                     <span className="text-xs text-gray-400 text-center">Mobile</span>
                   </div>
                 </div>
+
+                {/* Proceed to Pay button moved here, above transaction details */}
+                <Button
+                  type="submit"
+                  onClick={form.handleSubmit(onSubmit)}
+                  className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 transform hover:scale-[1.02] transition-all duration-300"
+                >
+                  <ShoppingCart className="w-4 h-4 mr-2" />
+                  Proceed to Pay
+                </Button>
 
                 <div className="space-y-3 bg-white/5 p-4 rounded-lg">
                   <p className="text-sm font-medium text-gray-400">Transaction Details</p>
