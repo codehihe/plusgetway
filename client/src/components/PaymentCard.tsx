@@ -130,7 +130,7 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      const text = upi.merchantName;
+      const text = upi.storeName;
       if (animationIndex < text.length) {
         setAnimatedText((prev) => prev + text[animationIndex]);
         setAnimationIndex(prev => prev + 1);
@@ -143,7 +143,7 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
     }, 100); // Speed of typing animation
 
     return () => clearInterval(interval);
-  }, [animationIndex, upi.merchantName]);
+  }, [animationIndex, upi.storeName]);
 
   const onSubmit = async (data: PaymentFormData) => {
     try {
@@ -232,17 +232,19 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
               className="flex items-center justify-between"
             >
               <div>
-                <motion.h2
-                  className="text-xl font-semibold text-red-400 flex items-center gap-2"
-                  key={animatedText}
-                >
+                <h2 className="text-xl font-semibold text-red-400 flex items-center gap-2">
                   <IndianRupee className="w-5 h-5" />
-                  <span className="font-mono">{animatedText}</span>
+                  <span>{upi.merchantName}</span>
                   <Badge variant="secondary" className="ml-2 bg-red-500/20 text-red-300">
                     Verified
                   </Badge>
-                </motion.h2>
-                <p className="text-sm text-gray-400 mt-1">Secure Payment Gateway</p>
+                </h2>
+                <motion.p 
+                  className="text-sm text-gray-400 mt-1"
+                  key={animatedText}
+                >
+                  {animatedText}
+                </motion.p>
               </div>
               <QrCode className="w-6 h-6 text-red-400" />
             </motion.div>

@@ -7,6 +7,7 @@ export const upiIds = pgTable("upi_ids", {
   id: serial("id").primaryKey(),
   upiId: text("upi_id").notNull().unique(),
   merchantName: text("merchant_name").notNull(),
+  storeName: text("store_name").notNull(),
   merchantCategory: text("merchant_category").default('general').notNull(),
   businessType: text("business_type").default('retail').notNull(),
   dailyLimit: decimal("daily_limit", { precision: 10, scale: 2 }).default("50000.00").notNull(),
@@ -56,6 +57,9 @@ export const insertUpiSchema = createInsertSchema(upiIds)
     merchantName: z.string()
       .min(2, "Merchant name must be at least 2 characters")
       .max(100, "Merchant name cannot exceed 100 characters"),
+    storeName: z.string()
+      .min(2, "Store name must be at least 2 characters")
+      .max(100, "Store name cannot exceed 100 characters"),
     merchantCategory: z.enum(['general', 'food', 'retail', 'services', 'education', 'healthcare'])
       .optional(),
     businessType: z.enum(['retail', 'online', 'wholesale', 'service'])
