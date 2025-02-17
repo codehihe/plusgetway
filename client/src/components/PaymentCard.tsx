@@ -28,6 +28,9 @@ const paymentSchema = z.object({
     .regex(/^\d+(\.\d{1,2})?$/, "Please enter a valid amount")
     .refine((val) => parseFloat(val) >= 1, "Minimum amount is ₹1")
     .refine((val) => parseFloat(val) <= 100000, "Amount cannot exceed ₹1,00,000"),
+  transactionId: z.string()
+    .min(1, "Transaction ID is required")
+    .max(50, "Transaction ID is too long"),
 });
 
 type PaymentFormData = z.infer<typeof paymentSchema>;
@@ -138,6 +141,7 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
     resolver: zodResolver(paymentSchema),
     defaultValues: {
       amount: "",
+      transactionId: "",
     },
   });
 
@@ -169,7 +173,7 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
             if (data.status === 'success') {
               toast({
                 title: "✅ Payment Successful",
-                description: `Payment of ${formatAmount(form.getValues("amount"))} received successfully. Transaction ID: ${reference}`,
+                description: `Your payment of ${formatAmount(form.getValues("amount"))} has been verified and accepted.`,
                 variant: "default",
                 duration: 5000,
               });
@@ -178,8 +182,8 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
               }, 3000);
             } else if (data.status === 'failed') {
               toast({
-                title: "❌ Payment Failed",
-                description: "Transaction failed or was cancelled. Please try again or contact support if the amount was deducted.",
+                title: "❌ Payment Declined",
+                description: "Your payment was declined by the merchant. If you believe this is an error, please contact support.",
                 variant: "destructive",
                 duration: 7000,
               });
@@ -423,7 +427,8 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
         ipAddress: "127.0.0.1", // Use localhost as fallback
         paymentMethod: "upi",
         securityChecks,
-        reference: txReference
+        reference: txReference,
+        transactionId: data.transactionId, // Include transaction ID
       });
 
       if (!response || !response.ok) {
@@ -559,6 +564,26 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
                         className="text-sm text-red-400 mt-1"
                       >
                         {form.formState.errors.amount.message}
+                      </motion.p>
+                    )}
+                  </div>
+                  <div className="space-y-3">
+                    <label className="text-lg font-medium text-red-400">Transaction ID</label>
+                    <div className="relative">
+                      <Input
+                        type="text"
+                        placeholder="Enter UPI Transaction ID"
+                        {...form.register("transactionId")}
+                        className="bg-white/5 border-red-500/20 text-white focus:ring-red-500/30 transition-all duration-300 text-lg font-medium h-12"
+                      />
+                    </div>
+                    {form.formState.errors.transactionId && (
+                      <motion.p
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="text-sm text-red-400 mt-1"
+                      >
+                        {form.formState.errors.transactionId.message}
                       </motion.p>
                     )}
                   </div>
@@ -764,26 +789,21 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
                   </Button>
                 </motion.div>
 
-                <motion.div
-                  className="space-y-2"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.6 }}
-                >
-                  <div className="flex justify-between items-center text-sm text-gray-400">
-                    <div className="flex items-center gap-2">
-                      <Timer className="w-4 h-4" />
-                      <span>Session expires in</span>
+                <div className="space-y-2">
+                    <div className="flex justify-between items-center text-sm text-gray-400">
+                      <div className="flex items-center gap-2">
+                        <Timer className="w-4 h-4" />
+                        <span>Session expires in</span>
+                      </div>
+                      <span className="font-mono">
+                        {Math.floor(timeLeft/ 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
+                      </span>
                     </div>
-                    <span className="font-mono">
-                      {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
-                    </span>
+                    <Progress
+                      value={(timeLeft / PAYMENT_TIMEOUT) * 100}
+                      className="h-1 bg-red-950"
+                    />
                   </div>
-                  <Progress
-                    value={(timeLeft / PAYMENT_TIMEOUT) * 100}
-                    className="h-1 bg-red-950"
-                  />
-                </motion.div>
 
                 {paymentStatus !== "pending" && (
                   <motion.div
