@@ -492,8 +492,10 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
         variant: "default",
       });
 
-      setShowVerification(false);
+      // Start checking for status updates
+      setPaymentStatus("processing");
     } catch (error) {
+      console.error("Verification submission error:", error);
       toast({
         title: "❌ Submission Failed",
         description: "Unable to submit transaction ID. Please try again.",

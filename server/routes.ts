@@ -157,7 +157,10 @@ export async function registerRoutes(app: Express) {
       }
 
       const transaction = await storage.updateTransactionStatus(reference, "pending");
-      await storage.updateTransactionDetails(reference, { transactionId });
+      if (!transaction) {
+        res.status(404).json({ message: "Transaction not found" });
+        return;
+      }
 
       res.json({ success: true, transaction });
     } catch (error) {
