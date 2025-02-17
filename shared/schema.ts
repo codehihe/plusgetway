@@ -35,8 +35,7 @@ export const transactions = pgTable("transactions", {
   completedAt: timestamp("completed_at"),
   failedAt: timestamp("failed_at"),
   retryCount: integer("retry_count").default(0),
-  securityChecks: text("security_checks").array(),
-  paymentMethod: text("payment_method"),
+  paymentMethod: text("payment_method").default("upi"),
   deviceInfo: text("device_info"),
   ipAddress: text("ip_address"),
   geolocation: text("geolocation")

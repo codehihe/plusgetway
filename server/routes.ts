@@ -92,9 +92,21 @@ export async function registerRoutes(app: Express) {
         return;
       }
 
+      if (upiDetails.blockedAt) {
+        res.status(403).json({ 
+          message: "This UPI ID is blocked. Please contact support.",
+          code: "UPI_BLOCKED"
+        });
+        return;
+      }
+
+      // Generate unique reference ID if not provided
+      const reference = result.data.reference || nanoid();
+
       // Create transaction with validated data
       const transaction = await storage.createTransaction({
         ...result.data,
+        reference,
         merchantName: upiDetails.merchantName,
       });
 

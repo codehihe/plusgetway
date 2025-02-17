@@ -156,7 +156,6 @@ export class DatabaseStorage implements IStorage {
           paymentMethod: tx.paymentMethod || "upi",
           deviceInfo: tx.deviceInfo,
           ipAddress: tx.ipAddress,
-          securityChecks: tx.securityChecks || [],
           timestamp: new Date()
         })
         .returning();
