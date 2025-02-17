@@ -18,7 +18,7 @@ export const upiIds = pgTable("upi_ids", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-// Transactions table
+// Enhanced Transactions table with verification fields
 export const transactions = pgTable("transactions", {
   id: serial("id").primaryKey(),
   amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
@@ -35,6 +35,15 @@ export const transactions = pgTable("transactions", {
   completedAt: timestamp("completed_at"),
   failedAt: timestamp("failed_at"),
   retryCount: integer("retry_count").default(0),
+  verificationStatus: text("verification_status").default("pending"),
+  verificationAttempts: integer("verification_attempts").default(0),
+  lastVerificationAt: timestamp("last_verification_at"),
+  securityChecks: text("security_checks").array(),
+  paymentMethod: text("payment_method"),
+  deviceInfo: text("device_info"),
+  ipAddress: text("ip_address"),
+  geolocation: text("geolocation"),
+  riskScore: decimal("risk_score", { precision: 5, scale: 2 }),
 });
 
 // Enhanced validation for UPI ID format
@@ -70,22 +79,34 @@ export const insertUpiSchema = createInsertSchema(upiIds)
       .optional(),
   });
 
+// Enhanced transaction schema with security validations
 export const insertTransactionSchema = createInsertSchema(transactions)
   .omit({ 
     id: true,
     timestamp: true, 
     completedAt: true, 
     failedAt: true, 
-    retryCount: true 
+    retryCount: true,
+    verificationStatus: true,
+    verificationAttempts: true,
+    lastVerificationAt: true,
+    securityChecks: true,
+    riskScore: true
   })
   .extend({
     amount: z.string()
+      .min(1, "Amount is required")
       .regex(/^\d+(\.\d{1,2})?$/, "Amount must be a valid number with up to 2 decimal places")
       .transform((val) => parseFloat(val))
       .refine((val) => val > 0, "Amount must be greater than 0")
       .refine((val) => val <= 100000, "Amount cannot exceed ₹1,00,000"),
-    reference: z.string().optional(),
-    customerName: z.string().optional(),
+    reference: z.string()
+      .min(10, "Invalid reference number")
+      .max(50, "Reference number too long"),
+    customerName: z.string()
+      .min(2, "Name must be at least 2 characters")
+      .max(100, "Name is too long")
+      .optional(),
     customerPhone: z.string()
       .regex(/^[0-9]{10}$/, "Invalid phone number")
       .optional(),
@@ -97,12 +118,42 @@ export const insertTransactionSchema = createInsertSchema(transactions)
       .optional(),
     paymentApp: z.enum(['gpay', 'phonepe', 'paytm', 'bhim', 'other'])
       .optional(),
+    paymentMethod: z.enum(['upi', 'wallet', 'netbanking'])
+      .default('upi'),
+    deviceInfo: z.string()
+      .optional(),
+    ipAddress: z.string()
+      .ip({ version: "v4", message: "Invalid IP address" })
+      .optional(),
+    geolocation: z.string()
+      .optional(),
   });
 
 export type UpiId = typeof upiIds.$inferSelect;
 export type InsertUpi = z.infer<typeof insertUpiSchema>;
 export type Transaction = typeof transactions.$inferSelect;
 export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
+
+// Transaction verification states
+export const TransactionStatus = {
+  PENDING: "pending",
+  PROCESSING: "processing",
+  SUCCESS: "success",
+  FAILED: "failed",
+  BLOCKED: "blocked",
+  EXPIRED: "expired",
+  REFUNDED: "refunded"
+} as const;
+
+// Security check types
+export const SecurityCheckTypes = {
+  AMOUNT_LIMIT: "amount_limit",
+  DAILY_LIMIT: "daily_limit",
+  RISK_ASSESSMENT: "risk_assessment",
+  LOCATION_VERIFICATION: "location_verification",
+  DEVICE_VERIFICATION: "device_verification",
+  FRAUD_CHECK: "fraud_check"
+} as const;
 
 export const ADMIN_PIN = "Khushi";
 

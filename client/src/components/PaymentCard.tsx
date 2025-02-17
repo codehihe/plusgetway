@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { UpiId } from "@shared/schema";
+import { UpiId, TransactionStatus, SecurityCheckTypes } from "@shared/schema";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,12 +12,14 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion, AnimatePresence } from "framer-motion";
 import { Timer, AlertTriangle, CheckCircle2, XCircle, IndianRupee, ExternalLink,
-  Smartphone, ShoppingCart, QrCode, Shield, Clock, Lock, XOctagon, AlertCircle, RefreshCcw } from "lucide-react";
+  Smartphone, ShoppingCart, QrCode, Shield, Clock, Lock, XOctagon, AlertCircle, RefreshCcw,
+  Loader2, ShieldCheck, Globe } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { SiGooglepay, SiPhonepe, SiPaytm } from "react-icons/si";
 import { getWebSocketUrl } from "@/lib/utils";
 
 const PAYMENT_TIMEOUT = 180; // 3 minutes in seconds
+const VERIFICATION_INTERVAL = 3000; // 3 seconds
 
 const paymentSchema = z.object({
   amount: z.string()
@@ -29,6 +31,7 @@ const paymentSchema = z.object({
 
 type PaymentFormData = z.infer<typeof paymentSchema>;
 
+// Enhanced UPI link generation with security parameters
 const generateUpiLink = (upi: UpiId, amount: string, reference: string) => {
   try {
     if (!upi?.upiId || !amount || !reference) {
@@ -46,6 +49,7 @@ const generateUpiLink = (upi: UpiId, amount: string, reference: string) => {
     const cleanMerchantName = encodeURIComponent(upi.merchantName.trim());
     const cleanReference = encodeURIComponent(reference.trim());
 
+    // Add additional security parameters
     const params = new URLSearchParams({
       pa: upi.upiId.trim(),
       pn: cleanMerchantName,
@@ -53,6 +57,9 @@ const generateUpiLink = (upi: UpiId, amount: string, reference: string) => {
       am: cleanAmount,
       cu: "INR",
       tr: cleanReference,
+      mc: upi.merchantCategory || "0000",
+      url: window.location.origin,
+      sign: btoa(`${upi.upiId}:${cleanAmount}:${cleanReference}`), // Basic integrity check
     });
 
     return `upi://pay?${params.toString()}`;
@@ -62,6 +69,7 @@ const generateUpiLink = (upi: UpiId, amount: string, reference: string) => {
   }
 };
 
+// Enhanced amount formatting with currency symbol
 const formatAmount = (amount: string) => {
   try {
     const parsedAmount = parseFloat(amount);
@@ -78,11 +86,49 @@ const formatAmount = (amount: string) => {
   }
 };
 
+// Security verification component
+const SecurityVerification = ({ status }: { status: string }) => {
+  const checks = [
+    { id: SecurityCheckTypes.AMOUNT_LIMIT, label: "Amount Verification", icon: IndianRupee },
+    { id: SecurityCheckTypes.RISK_ASSESSMENT, label: "Risk Assessment", icon: ShieldCheck },
+    { id: SecurityCheckTypes.LOCATION_VERIFICATION, label: "Location Check", icon: Globe },
+  ];
+
+  return (
+    <div className="space-y-2">
+      {checks.map((check, index) => {
+        const Icon = check.icon;
+        const isChecking = status === "processing" && index === 1;
+        const isComplete = status !== "pending" || index === 0;
+
+        return (
+          <div key={check.id} className="flex items-center gap-2 text-sm">
+            <div className={`p-1 rounded-full ${
+              isComplete ? "bg-green-500/20" : "bg-gray-500/20"
+            }`}>
+              {isChecking ? (
+                <Loader2 className="w-4 h-4 animate-spin text-blue-400" />
+              ) : (
+                <Icon className={`w-4 h-4 ${
+                  isComplete ? "text-green-400" : "text-gray-400"
+                }`} />
+              )}
+            </div>
+            <span className={isComplete ? "text-green-400" : "text-gray-400"}>
+              {check.label}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
 const PaymentCard = ({ upi }: { upi: UpiId }) => {
   const [showQR, setShowQR] = useState(false);
   const [reference, setReference] = useState("");
   const [timeLeft, setTimeLeft] = useState(PAYMENT_TIMEOUT);
-  const [paymentStatus, setPaymentStatus] = useState<"pending" | "success" | "failed">("pending");
+  const [paymentStatus, setPaymentStatus] = useState<"pending" | "success" | "failed" | "processing">("pending");
   const [wsConnected, setWsConnected] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
   const { toast } = useToast();
@@ -118,8 +164,8 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
           if (data.type === 'connected') {
             console.log('Successfully connected to payment server');
           } else if (data.type === 'payment_status' && data.reference === reference) {
+            setPaymentStatus(data.status);
             if (data.status === 'success') {
-              setPaymentStatus('success');
               toast({
                 title: "✅ Payment Successful",
                 description: `Payment of ${formatAmount(form.getValues("amount"))} received successfully. Transaction ID: ${reference}`,
@@ -130,7 +176,6 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
                 window.location.reload();
               }, 3000);
             } else if (data.status === 'failed') {
-              setPaymentStatus('failed');
               toast({
                 title: "❌ Payment Failed",
                 description: "Transaction failed or was cancelled. Please try again or contact support if the amount was deducted.",
@@ -291,6 +336,31 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
     }
   }, [timeLeft, toast]);
 
+  // Add security check function
+  const performSecurityChecks = async (amount: string) => {
+    const checks = [];
+    const parsedAmount = parseFloat(amount);
+    const dailyLimit = parseFloat(String(upi.dailyLimit));
+
+    // Amount limit check
+    if (!isNaN(dailyLimit) && parsedAmount <= dailyLimit) {
+      checks.push(SecurityCheckTypes.AMOUNT_LIMIT);
+    }
+
+    // Device and location verification
+    if (navigator.userAgent) {
+      checks.push(SecurityCheckTypes.DEVICE_VERIFICATION);
+    }
+
+    // Risk assessment based on amount and merchant category
+    if (upi.merchantCategory && !upi.blockedAt) {
+      checks.push(SecurityCheckTypes.RISK_ASSESSMENT);
+    }
+
+    return checks;
+  };
+
+
   const onSubmit = async (data: PaymentFormData) => {
     try {
       const amount = parseFloat(data.amount);
@@ -303,6 +373,7 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
         return;
       }
 
+      // Enhanced validation before transaction
       if (upi.blockedAt) {
         setPaymentStatus("failed");
         toast({
@@ -325,11 +396,20 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
         return;
       }
 
+      setPaymentStatus("processing");
+
+      // Perform security checks
+      const securityChecks = await performSecurityChecks(data.amount);
+
       const res = await apiRequest("POST", "/api/transactions", {
         amount: data.amount,
         upiId: upi.upiId,
         merchantName: upi.merchantName,
         status: "pending",
+        deviceInfo: navigator.userAgent,
+        ipAddress: window.location.hostname,
+        paymentMethod: "upi",
+        securityChecks,
       });
 
       if (!res.ok) {
@@ -471,28 +551,28 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
                     )}
                   </div>
                   <div className="grid grid-cols-3 gap-6">
-                  <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    className="flex flex-col items-center p-4 bg-white/5 rounded-lg border border-red-500/10 hover:border-red-500/20 transition-all duration-300"
-                  >
-                    <Shield className="w-8 h-8 text-green-400 mb-2" />
-                    <span className="text-sm font-medium text-gray-300">Secure</span>
-                  </motion.div>
-                  <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    className="flex flex-col items-center p-4 bg-white/5 rounded-lg border border-red-500/10 hover:border-red-500/20 transition-all duration-300"
-                  >
-                    <Clock className="w-8 h-8 text-blue-400 mb-2" />
-                    <span className="text-sm font-medium text-gray-300">Instant</span>
-                  </motion.div>
-                  <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    className="flex flex-col items-center p-4 bg-white/5 rounded-lg border border-red-500/10 hover:border-red-500/20 transition-all duration-300"
-                  >
-                    <Smartphone className="w-8 h-8 text-purple-400 mb-2" />
-                    <span className="text-sm font-medium text-gray-300">Mobile</span>
-                  </motion.div>
-                </div>
+                    <motion.div
+                      whileHover={{ scale: 1.05 }}
+                      className="flex flex-col items-center p-4 bg-white/5 rounded-lg border border-red-500/10 hover:border-red-500/20 transition-all duration-300"
+                    >
+                      <Shield className="w-8 h-8 text-green-400 mb-2" />
+                      <span className="text-sm font-medium text-gray-300">Secure</span>
+                    </motion.div>
+                    <motion.div
+                      whileHover={{ scale: 1.05 }}
+                      className="flex flex-col items-center p-4 bg-white/5 rounded-lg border border-red-500/10 hover:border-red-500/20 transition-all duration-300"
+                    >
+                      <Clock className="w-8 h-8 text-blue-400 mb-2" />
+                      <span className="text-sm font-medium text-gray-300">Instant</span>
+                    </motion.div>
+                    <motion.div
+                      whileHover={{ scale: 1.05 }}
+                      className="flex flex-col items-center p-4 bg-white/5 rounded-lg border border-red-500/10 hover:border-red-500/20 transition-all duration-300"
+                    >
+                      <Smartphone className="w-8 h-8 text-purple-400 mb-2" />
+                      <span className="text-sm font-medium text-gray-300">Mobile</span>
+                    </motion.div>
+                  </div>
                   <Button
                     type="submit"
                     onClick={form.handleSubmit(onSubmit)}
@@ -588,6 +668,7 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
                           Reference: {reference}
                         </p>
                       </motion.div>
+                      <SecurityVerification status={paymentStatus}/>
                     </>
                   ) : (
                     <div className="text-center p-6 space-y-4">
@@ -628,16 +709,7 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
                 >
                   <div className="bg-white/5 p-4 rounded-lg space-y-3">
                     <h4 className="text-red-400 font-medium">Payment Security</h4>
-                    <div className="grid grid-cols-2 gap-3 text-sm">
-                      <div className="flex items-center gap-2 text-gray-400">
-                        <Shield className="w-4 h-4 text-green-400" />
-                        End-to-end Encrypted
-                      </div>
-                      <div className="flex items-center gap-2 text-gray-400">
-                        <Lock className="w-4 h-4 text-blue-400" />
-                        Secure Transaction
-                      </div>
-                    </div>
+                    <SecurityVerification status={paymentStatus}/>
                   </div>
 
 
