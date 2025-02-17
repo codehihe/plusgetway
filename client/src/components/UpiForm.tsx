@@ -1,4 +1,3 @@
-
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertUpiSchema } from "@shared/schema";
@@ -11,7 +10,7 @@ import type { InsertUpi } from "@shared/schema";
 
 export default function UpiForm() {
   const { toast } = useToast();
-  
+
   const form = useForm<InsertUpi>({
     resolver: zodResolver(insertUpiSchema),
     defaultValues: {
@@ -30,7 +29,7 @@ export default function UpiForm() {
         ...data,
         dailyLimit: Number(data.dailyLimit)
       });
-      
+
       if (response) {
         queryClient.invalidateQueries({ queryKey: ["/api/upi"] });
         form.reset();
@@ -40,10 +39,14 @@ export default function UpiForm() {
         });
       }
     } catch (error: any) {
-      const errorMessage = error.message?.includes('duplicate key') 
-        ? "This UPI ID already exists"
-        : "Failed to add UPI ID";
-      
+      let errorMessage = "Failed to add UPI ID";
+
+      if (error.message?.includes('409')) {
+        errorMessage = "This UPI ID already exists";
+      } else if (error.message?.includes('duplicate key')) {
+        errorMessage = "This UPI ID already exists";
+      }
+
       toast({
         title: "Error",
         description: errorMessage,
@@ -66,7 +69,7 @@ export default function UpiForm() {
           </p>
         )}
       </div>
-      
+
       <div>
         <Input
           placeholder="Store Name"

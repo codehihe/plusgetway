@@ -31,14 +31,33 @@ export async function registerRoutes(app: Express) {
   });
 
   app.post("/api/upi", async (req, res) => {
-    const result = insertUpiSchema.safeParse(req.body);
-    if (!result.success) {
-      res.status(400).json({ message: "Invalid UPI details", errors: result.error.errors });
-      return;
-    }
+    try {
+      const result = insertUpiSchema.safeParse(req.body);
+      if (!result.success) {
+        res.status(400).json({ message: "Invalid UPI details", errors: result.error.errors });
+        return;
+      }
 
-    const upiId = await storage.addUpiId(result.data);
-    res.json(upiId);
+      // Check if UPI ID already exists
+      const existingUpi = await storage.getUpiIdByAddress(result.data.upiId);
+      if (existingUpi) {
+        res.status(409).json({ 
+          message: "This UPI ID already exists",
+          code: "DUPLICATE_UPI"
+        });
+        return;
+      }
+
+      const upiId = await storage.addUpiId(result.data);
+      res.json(upiId);
+    } catch (error: any) {
+      console.error("Error adding UPI ID:", error);
+      res.status(500).json({ 
+        message: "Failed to add UPI ID",
+        error: error.message,
+        code: "UPI_ADD_FAILED"
+      });
+    }
   });
 
   app.post("/api/upi/:id/toggle", async (req, res) => {
