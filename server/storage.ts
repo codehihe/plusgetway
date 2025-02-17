@@ -312,18 +312,28 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getTransaction(reference: string): Promise<Transaction | undefined> {
-    const [transaction] = await db
-      .select()
-      .from(transactions)
-      .where(eq(transactions.reference, reference));
-    return transaction;
+    try {
+      const [transaction] = await db
+        .select()
+        .from(transactions)
+        .where(eq(transactions.reference, reference));
+      return transaction;
+    } catch (error) {
+      console.error("Transaction fetch error:", error);
+      return undefined;
+    }
   }
 
   async getTransactions(): Promise<Transaction[]> {
-    return await db
-      .select()
-      .from(transactions)
-      .orderBy(desc(transactions.timestamp));
+    try {
+      return await db
+        .select()
+        .from(transactions)
+        .orderBy(desc(transactions.timestamp));
+    } catch (error) {
+      console.error("Transactions fetch error:", error);
+      return [];
+    }
   }
 
   async getDailyTransactions(upiId: string): Promise<Transaction[]> {

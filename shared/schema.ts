@@ -36,15 +36,14 @@ export const upiIds = pgTable("upi_ids", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-// Enhanced Transactions table with user references
+// Updated Transactions table without user dependency
 export const transactions = pgTable("transactions", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull().default(1), // Default user for now
   amount: text("amount").notNull(),
   upiId: text("upi_id").notNull(),
   merchantName: text("merchant_name").notNull(),
   reference: text("reference").notNull().unique(),
-  status: text("status").notNull().default("pending"),
+  status: text("status").default("pending").notNull(),
   customerName: text("customer_name"),
   customerPhone: text("customer_phone"),
   customerEmail: text("customer_email"),
@@ -95,7 +94,7 @@ export const insertUserSchema = createInsertSchema(users)
       .regex(/^[0-9]{10}$/, "Phone number must be 10 digits"),
   });
 
-// Keep existing schemas
+// Keep existing schemas but update transaction schema
 export const insertUpiSchema = createInsertSchema(upiIds)
   .omit({ id: true, isActive: true, blockedAt: true, deletedAt: true, createdAt: true, updatedAt: true })
   .extend({
@@ -119,9 +118,17 @@ export const insertUpiSchema = createInsertSchema(upiIds)
       .optional(),
   });
 
-// Enhanced transaction schema with user validation
+// Updated transaction schema with user validation
 export const insertTransactionSchema = createInsertSchema(transactions)
-  .omit({ id: true, timestamp: true, completedAt: true, failedAt: true, retryCount: true, verifiedBy: true, verifiedAt: true })
+  .omit({
+    id: true,
+    timestamp: true,
+    completedAt: true,
+    failedAt: true,
+    retryCount: true,
+    verifiedBy: true,
+    verifiedAt: true
+  })
   .extend({
     amount: z.string()
       .min(1, "Amount is required")
