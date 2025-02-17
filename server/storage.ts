@@ -139,23 +139,32 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createTransaction(tx: InsertTransaction): Promise<Transaction> {
-    const [transaction] = await db
-      .insert(transactions)
-      .values({
-        amount: tx.amount.toString(),
-        upiId: tx.upiId,
-        merchantName: tx.merchantName,
-        reference: tx.reference || uuidv4(),
-        status: tx.status || "pending",
-        customerName: tx.customerName,
-        customerPhone: tx.customerPhone,
-        customerEmail: tx.customerEmail,
-        description: tx.description,
-        paymentApp: tx.paymentApp,
-        timestamp: new Date()
-      })
-      .returning();
-    return transaction;
+    try {
+      const [transaction] = await db
+        .insert(transactions)
+        .values({
+          amount: tx.amount.toString(),
+          upiId: tx.upiId,
+          merchantName: tx.merchantName,
+          reference: tx.reference,
+          status: "pending",
+          customerName: tx.customerName,
+          customerPhone: tx.customerPhone,
+          customerEmail: tx.customerEmail,
+          description: tx.description,
+          paymentApp: tx.paymentApp,
+          paymentMethod: tx.paymentMethod || "upi",
+          deviceInfo: tx.deviceInfo,
+          ipAddress: tx.ipAddress,
+          securityChecks: tx.securityChecks || [],
+          timestamp: new Date()
+        })
+        .returning();
+      return transaction;
+    } catch (error) {
+      console.error("Transaction creation error:", error);
+      throw error;
+    }
   }
 
   async updateTransactionStatus(reference: string, status: 'success' | 'failed'): Promise<Transaction> {

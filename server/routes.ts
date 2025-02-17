@@ -92,38 +92,10 @@ export async function registerRoutes(app: Express) {
         return;
       }
 
-      if (upiDetails.blockedAt) {
-        res.status(403).json({ 
-          message: "This UPI ID is blocked. Please contact support.",
-          code: "UPI_BLOCKED"
-        });
-        return;
-      }
-
-      if (upiDetails.deletedAt) {
-        res.status(403).json({ 
-          message: "This UPI ID is no longer active. Please use a different UPI ID.",
-          code: "UPI_DELETED"
-        });
-        return;
-      }
-
-      if (!upiDetails.isActive) {
-        res.status(403).json({ 
-          message: "This UPI ID is currently inactive. Please try again later.",
-          code: "UPI_INACTIVE"
-        });
-        return;
-      }
-
-      // Generate unique reference ID
-      const reference = nanoid();
-
       // Create transaction with validated data
       const transaction = await storage.createTransaction({
         ...result.data,
-        reference,
-        status: "pending"
+        merchantName: upiDetails.merchantName,
       });
 
       // Return detailed response

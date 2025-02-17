@@ -35,15 +35,11 @@ export const transactions = pgTable("transactions", {
   completedAt: timestamp("completed_at"),
   failedAt: timestamp("failed_at"),
   retryCount: integer("retry_count").default(0),
-  verificationStatus: text("verification_status").default("pending"),
-  verificationAttempts: integer("verification_attempts").default(0),
-  lastVerificationAt: timestamp("last_verification_at"),
   securityChecks: text("security_checks").array(),
   paymentMethod: text("payment_method"),
   deviceInfo: text("device_info"),
   ipAddress: text("ip_address"),
-  geolocation: text("geolocation"),
-  riskScore: decimal("risk_score", { precision: 5, scale: 2 }),
+  geolocation: text("geolocation")
 });
 
 // Enhanced validation for UPI ID format
