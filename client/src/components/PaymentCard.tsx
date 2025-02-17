@@ -839,8 +839,6 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
                           </div>
                         )}
                       </div>
-                    </div>
-                  </div>
                 )}
 
                 <Button
