@@ -1,9 +1,33 @@
-import { UpiId, InsertUpi, Transaction, InsertTransaction, UpiAuditLog, upiIds, transactions, upiAuditLogs } from "@shared/schema";
+import { UpiId, InsertUpi, Transaction, InsertTransaction, UpiAuditLog, UserAuditLog, User, InsertUser, UserStatus, upiIds, transactions, upiAuditLogs, userAuditLogs, users } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, isNull, and, gt, lte } from "drizzle-orm";
 import { v4 as uuidv4 } from 'uuid';
+import session from 'express-session';
+import connectPg from 'connect-pg-simple';
+
+const PostgresSessionStore = connectPg(session);
 
 export interface IStorage {
+  // User management
+  createUser(user: InsertUser): Promise<User>;
+  getUser(id: number): Promise<User | undefined>;
+  getUserByUsername(username: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
+  updateUserStatus(id: number, status: string, approvedBy?: number): Promise<User>;
+  updateUserLastLogin(id: number): Promise<User>;
+  getPendingUsers(): Promise<User[]>;
+  createUserAuditLog(audit: {
+    userId: number,
+    action: string,
+    details?: string,
+    ipAddress?: string,
+    userAgent?: string
+  }): Promise<UserAuditLog>;
+
+  // Session store
+  sessionStore: session.Store;
+
+  // Existing UPI methods
   getUpiIds(includeDeleted?: boolean): Promise<UpiId[]>;
   getUpiIdByAddress(upiAddress: string): Promise<UpiId | undefined>;
   addUpiId(upi: InsertUpi): Promise<UpiId>;
@@ -11,22 +35,125 @@ export interface IStorage {
   blockUpiId(id: number): Promise<UpiId>;
   unblockUpiId(id: number): Promise<UpiId>;
   deleteUpiId(id: number): Promise<UpiId>;
+
+  // Transaction methods
   createTransaction(tx: InsertTransaction): Promise<Transaction>;
   updateTransactionStatus(reference: string, status: 'success' | 'failed'): Promise<Transaction>;
   getTransaction(reference: string): Promise<Transaction | undefined>;
   getTransactions(): Promise<Transaction[]>;
   getDailyTransactions(upiId: string): Promise<Transaction[]>;
-  logUpiAudit(audit: { 
-    upiId: number, 
-    action: string, 
-    oldValues?: any, 
+  logUpiAudit(audit: {
+    upiId: number,
+    action: string,
+    oldValues?: any,
     newValues?: any,
     actionBy?: string,
-    ipAddress?: string 
+    ipAddress?: string
   }): Promise<UpiAuditLog>;
 }
 
 export class DatabaseStorage implements IStorage {
+  sessionStore: session.Store;
+
+  constructor() {
+    this.sessionStore = new PostgresSessionStore({
+      createTableIfMissing: true,
+      tableName: 'user_sessions'
+    });
+  }
+
+  // User management methods
+  async createUser(user: InsertUser): Promise<User> {
+    const now = new Date();
+    const [newUser] = await db
+      .insert(users)
+      .values({
+        ...user,
+        status: UserStatus.PENDING,
+        createdAt: now,
+        updatedAt: now
+      })
+      .returning();
+    return newUser;
+  }
+
+  async getUser(id: number): Promise<User | undefined> {
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, id));
+    return user;
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.username, username));
+    return user;
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, email));
+    return user;
+  }
+
+  async updateUserStatus(id: number, status: string, approvedBy?: number): Promise<User> {
+    const now = new Date();
+    const [user] = await db
+      .update(users)
+      .set({
+        status,
+        isApproved: status === UserStatus.APPROVED,
+        approvedAt: status === UserStatus.APPROVED ? now : null,
+        approvedBy: status === UserStatus.APPROVED ? approvedBy : null,
+        updatedAt: now
+      })
+      .where(eq(users.id, id))
+      .returning();
+    return user;
+  }
+
+  async updateUserLastLogin(id: number): Promise<User> {
+    const [user] = await db
+      .update(users)
+      .set({
+        lastLoginAt: new Date(),
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, id))
+      .returning();
+    return user;
+  }
+
+  async getPendingUsers(): Promise<User[]> {
+    return await db
+      .select()
+      .from(users)
+      .where(eq(users.status, UserStatus.PENDING))
+      .orderBy(desc(users.createdAt));
+  }
+
+  async createUserAuditLog(audit: {
+    userId: number,
+    action: string,
+    details?: string,
+    ipAddress?: string,
+    userAgent?: string
+  }): Promise<UserAuditLog> {
+    const [log] = await db
+      .insert(userAuditLogs)
+      .values({
+        ...audit,
+        timestamp: new Date()
+      })
+      .returning();
+    return log;
+  }
+
   async getUpiIds(includeDeleted: boolean = false): Promise<UpiId[]> {
     const query = db.select().from(upiIds)
       .where(includeDeleted ? undefined : isNull(upiIds.deletedAt))
@@ -45,8 +172,8 @@ export class DatabaseStorage implements IStorage {
     const now = new Date();
     const [upiId] = await db
       .insert(upiIds)
-      .values({ 
-        ...upi, 
+      .values({
+        ...upi,
         isActive: true,
         createdAt: now,
         updatedAt: now
@@ -61,7 +188,7 @@ export class DatabaseStorage implements IStorage {
 
     const [updated] = await db
       .update(upiIds)
-      .set({ 
+      .set({
         isActive: !upi.isActive,
         updatedAt: new Date()
       })
@@ -82,7 +209,7 @@ export class DatabaseStorage implements IStorage {
     const now = new Date();
     const [updated] = await db
       .update(upiIds)
-      .set({ 
+      .set({
         blockedAt: now,
         updatedAt: now
       })
@@ -102,7 +229,7 @@ export class DatabaseStorage implements IStorage {
     const now = new Date();
     const [updated] = await db
       .update(upiIds)
-      .set({ 
+      .set({
         blockedAt: null,
         updatedAt: now
       })
@@ -122,7 +249,7 @@ export class DatabaseStorage implements IStorage {
     const now = new Date();
     const [updated] = await db
       .update(upiIds)
-      .set({ 
+      .set({
         deletedAt: now,
         updatedAt: now
       })

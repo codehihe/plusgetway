@@ -2,6 +2,24 @@ import { pgTable, text, serial, integer, timestamp, boolean, decimal } from "dri
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// Users table
+export const users = pgTable("users", {
+  id: serial("id").primaryKey(),
+  username: text("username").notNull().unique(),
+  password: text("password").notNull(),
+  email: text("email").notNull().unique(),
+  fullName: text("full_name").notNull(),
+  phone: text("phone").notNull(),
+  role: text("role").default("user").notNull(),
+  isApproved: boolean("is_approved").default(false).notNull(),
+  approvedAt: timestamp("approved_at"),
+  approvedBy: integer("approved_by"),
+  status: text("status").default("pending").notNull(),
+  lastLoginAt: timestamp("last_login_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // UPI IDs table
 export const upiIds = pgTable("upi_ids", {
   id: serial("id").primaryKey(),
@@ -18,9 +36,10 @@ export const upiIds = pgTable("upi_ids", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-// Enhanced Transactions table with verification fields
+// Enhanced Transactions table with user references
 export const transactions = pgTable("transactions", {
   id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(), // Added user reference
   amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
   upiId: text("upi_id").notNull(),
   merchantName: text("merchant_name").notNull(),
@@ -38,12 +57,45 @@ export const transactions = pgTable("transactions", {
   paymentMethod: text("payment_method").default("upi"),
   deviceInfo: text("device_info"),
   ipAddress: text("ip_address"),
-  geolocation: text("geolocation")
+  geolocation: text("geolocation"),
+  verifiedBy: integer("verified_by"), // Added admin verification
+  verifiedAt: timestamp("verified_at"),
 });
 
 // Enhanced validation for UPI ID format
 const upiIdRegex = /^[a-zA-Z0-9_.+-]+@[a-zA-Z][a-zA-Z0-9]+$/;
 
+// User registration schema
+export const insertUserSchema = createInsertSchema(users)
+  .omit({
+    id: true,
+    isApproved: true,
+    approvedAt: true,
+    approvedBy: true,
+    status: true,
+    lastLoginAt: true,
+    createdAt: true,
+    updatedAt: true,
+  })
+  .extend({
+    username: z.string()
+      .min(3, "Username must be at least 3 characters")
+      .max(50, "Username cannot exceed 50 characters")
+      .regex(/^[a-zA-Z0-9_]+$/, "Username can only contain letters, numbers, and underscores"),
+    password: z.string()
+      .min(8, "Password must be at least 8 characters")
+      .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/, 
+        "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character"),
+    email: z.string()
+      .email("Invalid email address"),
+    fullName: z.string()
+      .min(2, "Full name must be at least 2 characters")
+      .max(100, "Full name cannot exceed 100 characters"),
+    phone: z.string()
+      .regex(/^[0-9]{10}$/, "Phone number must be 10 digits"),
+  });
+
+// Keep existing schemas
 export const insertUpiSchema = createInsertSchema(upiIds)
   .omit({ 
     id: true, 
@@ -74,7 +126,7 @@ export const insertUpiSchema = createInsertSchema(upiIds)
       .optional(),
   });
 
-// Enhanced transaction schema with security validations
+// Enhanced transaction schema with user validation
 export const insertTransactionSchema = createInsertSchema(transactions)
   .omit({ 
     id: true,
@@ -82,11 +134,8 @@ export const insertTransactionSchema = createInsertSchema(transactions)
     completedAt: true, 
     failedAt: true, 
     retryCount: true,
-    verificationStatus: true,
-    verificationAttempts: true,
-    lastVerificationAt: true,
-    securityChecks: true,
-    riskScore: true
+    verifiedBy: true,
+    verifiedAt: true
   })
   .extend({
     amount: z.string()
@@ -124,12 +173,22 @@ export const insertTransactionSchema = createInsertSchema(transactions)
       .optional(),
   });
 
+// Export types
+export type User = typeof users.$inferSelect;
+export type InsertUser = z.infer<typeof insertUserSchema>;
 export type UpiId = typeof upiIds.$inferSelect;
 export type InsertUpi = z.infer<typeof insertUpiSchema>;
 export type Transaction = typeof transactions.$inferSelect;
 export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
 
-// Transaction verification states
+// Status enums
+export const UserStatus = {
+  PENDING: "pending",
+  APPROVED: "approved",
+  REJECTED: "rejected",
+  BLOCKED: "blocked"
+} as const;
+
 export const TransactionStatus = {
   PENDING: "pending",
   PROCESSING: "processing",
@@ -150,7 +209,16 @@ export const SecurityCheckTypes = {
   FRAUD_CHECK: "fraud_check"
 } as const;
 
-export const ADMIN_PIN = "Khushi";
+// Audit trail for user actions
+export const userAuditLogs = pgTable("user_audit_logs", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  action: text("action").notNull(),
+  details: text("details"),
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  timestamp: timestamp("timestamp").defaultNow().notNull(),
+});
 
 // Audit trail for UPI ID changes
 export const upiAuditLogs = pgTable("upi_audit_logs", {
@@ -164,4 +232,9 @@ export const upiAuditLogs = pgTable("upi_audit_logs", {
   ipAddress: text("ip_address"),
 });
 
+// Export audit log types
+export type UserAuditLog = typeof userAuditLogs.$inferSelect;
 export type UpiAuditLog = typeof upiAuditLogs.$inferSelect;
+
+// Admin PIN remains unchanged
+export const ADMIN_PIN = "Khushi";
