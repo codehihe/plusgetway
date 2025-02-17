@@ -374,6 +374,10 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
       }
 
       // Enhanced validation before transaction
+      if (!upi || !upi.upiId) {
+        throw new Error("Invalid UPI configuration");
+      }
+
       if (upi.blockedAt) {
         setPaymentStatus("failed");
         toast({
@@ -401,50 +405,49 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
       // Perform security checks
       const securityChecks = await performSecurityChecks(data.amount);
 
-      const res = await apiRequest("POST", "/api/transactions", {
+      const response = await apiRequest("POST", "/api/transactions", {
         amount: data.amount,
         upiId: upi.upiId,
         merchantName: upi.merchantName,
         status: "pending",
-        deviceInfo: navigator.userAgent,
+        deviceInfo: navigator.userAgent || "unknown",
         ipAddress: window.location.hostname,
         paymentMethod: "upi",
         securityChecks,
       });
 
-      if (!res.ok) {
-        const errorData = await res.json();
+      if (!response || !response.ok) {
+        const errorData = await response.json().catch(() => ({ message: "Failed to create transaction" }));
         if (errorData.code === "BLOCKED_BY_AUTHORITY") {
           throw new Error("Transaction blocked by authorities for security reasons");
         }
         throw new Error(errorData.message || "Failed to create transaction");
       }
 
-      const tx = await res.json();
+      const tx = await response.json();
+      if (!tx || !tx.reference) {
+        throw new Error("Invalid transaction response");
+      }
+
       setReference(tx.reference);
       setTimeLeft(PAYMENT_TIMEOUT);
       setPaymentStatus("pending");
       setShowQR(true);
-    } catch (error) {
+
+    } catch (error: any) {
       console.error("Payment initiation error:", error);
       setPaymentStatus("failed");
+
       const errorMessage = error instanceof Error ? error.message : "Unable to initiate payment";
 
-      if (errorMessage.includes("blocked by authorities")) {
-        toast({
-          title: "❌ Transaction Blocked",
-          description: "For security reasons, sending money from your account for this payment is not permitted.",
-          variant: "destructive",
-          duration: 10000,
-        });
-      } else {
-        toast({
-          title: "❌ Payment Error",
-          description: errorMessage + ". Please try again.",
-          variant: "destructive",
-          duration: 7000,
-        });
-      }
+      toast({
+        title: "❌ Payment Error",
+        description: errorMessage.includes("blocked by authorities") 
+          ? "For security reasons, sending money from your account for this payment is not permitted."
+          : `${errorMessage}. Please try again.`,
+        variant: "destructive",
+        duration: 7000,
+      });
     }
   };
 
@@ -791,7 +794,7 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
                       )}
                       <div>
                         <p className={`font-medium ${
-                          paymentStatus === "success" ? "text-green-400" : "text-red-400"
+                          paymentStatuspaymentStatus === "success" ? "text-green-400" : "text-red-400"
                         }`}>
                           {paymentStatus === "success" ? "Payment Successful" : "Payment Failed"}
                         </p>
