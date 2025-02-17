@@ -40,7 +40,6 @@ const verificationSchema = z.object({
 type PaymentFormData = z.infer<typeof paymentSchema>;
 type VerificationFormData = z.infer<typeof verificationSchema>;
 
-// Enhanced UPI link generation with security parameters
 const generateUpiLink = (upi: UpiId, amount: string, reference: string) => {
   try {
     if (!upi?.upiId || !amount || !reference) {
@@ -58,7 +57,6 @@ const generateUpiLink = (upi: UpiId, amount: string, reference: string) => {
     const cleanMerchantName = encodeURIComponent(upi.merchantName.trim());
     const cleanReference = encodeURIComponent(reference.trim());
 
-    // Add additional security parameters
     const params = new URLSearchParams({
       pa: upi.upiId.trim(),
       pn: cleanMerchantName,
@@ -68,7 +66,7 @@ const generateUpiLink = (upi: UpiId, amount: string, reference: string) => {
       tr: cleanReference,
       mc: upi.merchantCategory || "0000",
       url: window.location.origin,
-      sign: btoa(`${upi.upiId}:${cleanAmount}:${cleanReference}`), // Basic integrity check
+      sign: btoa(`${upi.upiId}:${cleanAmount}:${cleanReference}`), 
     });
 
     return `upi://pay?${params.toString()}`;
@@ -78,7 +76,6 @@ const generateUpiLink = (upi: UpiId, amount: string, reference: string) => {
   }
 };
 
-// Enhanced amount formatting with currency symbol
 const formatAmount = (amount: string) => {
   try {
     const parsedAmount = parseFloat(amount);
@@ -95,7 +92,6 @@ const formatAmount = (amount: string) => {
   }
 };
 
-// Security verification component
 const SecurityVerification = ({ status }: { status: string }) => {
   const checks = [
     { id: SecurityCheckTypes.AMOUNT_LIMIT, label: "Amount Verification", icon: IndianRupee },
@@ -353,23 +349,19 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
     }
   }, [timeLeft, toast]);
 
-  // Add security check function
   const performSecurityChecks = async (amount: string) => {
     const checks = [];
     const parsedAmount = parseFloat(amount);
     const dailyLimit = parseFloat(String(upi.dailyLimit));
 
-    // Amount limit check
     if (!isNaN(dailyLimit) && parsedAmount <= dailyLimit) {
       checks.push(SecurityCheckTypes.AMOUNT_LIMIT);
     }
 
-    // Device and location verification
     if (navigator.userAgent) {
       checks.push(SecurityCheckTypes.DEVICE_VERIFICATION);
     }
 
-    // Risk assessment based on amount and merchant category
     if (upi.merchantCategory && !upi.blockedAt) {
       checks.push(SecurityCheckTypes.RISK_ASSESSMENT);
     }
@@ -380,7 +372,6 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
 
   const onSubmit = async (data: PaymentFormData) => {
     try {
-      // Reset any existing error states
       setPaymentStatus("pending");
       setReference("");
       setShowVerification(false);
@@ -395,7 +386,6 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
         return;
       }
 
-      // Enhanced validation before transaction
       if (!upi || !upi.upiId) {
         throw new Error("Invalid UPI configuration");
       }
@@ -424,11 +414,9 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
 
       setPaymentStatus("processing");
 
-      // Generate reference ID
       const txReference = uuidv4();
       setReference(txReference);
 
-      // Perform security checks
       const securityChecks = await performSecurityChecks(data.amount);
 
       const response = await apiRequest("POST", "/api/transactions", {
@@ -740,64 +728,36 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
                       </Button>
                     </div>
 
-                    {paymentStatus === "pending" && !showVerification && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="mt-4"
-                      >
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="mt-4 space-y-4"
+                    >
+                      <form onSubmit={verificationForm.handleSubmit(handleVerificationSubmit)} className="space-y-4">
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium text-red-400">
+                            Enter your UPI Transaction ID
+                          </label>
+                          <Input
+                            type="text"
+                            {...verificationForm.register("transactionId")}
+                            className="bg-white/10 border-red-500/20"
+                            placeholder="Enter the transaction ID from your UPI app"
+                          />
+                          {verificationForm.formState.errors.transactionId && (
+                            <p className="text-sm text-red-400">
+                              {verificationForm.formState.errors.transactionId.message}
+                            </p>
+                          )}
+                        </div>
                         <Button
-                          variant="outline"
-                          className="w-full border-red-500/20 text-red-400 hover:bg-red-500/10"
-                          onClick={() => setShowVerification(true)}
+                          type="submit"
+                          className="w-full bg-green-500 hover:bg-green-600"
                         >
-                          I've Made the Payment
+                          Submit Transaction ID
                         </Button>
-                      </motion.div>
-                    )}
-
-                    {showVerification && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="mt-4 space-y-4"
-                      >
-                        <form onSubmit={verificationForm.handleSubmit(handleVerificationSubmit)} className="space-y-4">
-                          <div className="space-y-2">
-                            <label className="text-sm font-medium text-red-400">
-                              Enter your UPI Transaction ID
-                            </label>
-                            <Input
-                              type="text"
-                              {...verificationForm.register("transactionId")}
-                              className="bg-white/10 border-red-500/20"
-                              placeholder="Enter the transaction ID from your UPI app"
-                            />
-                            {verificationForm.formState.errors.transactionId && (
-                              <p className="text-sm text-red-400">
-                                {verificationForm.formState.errors.transactionId.message}
-                              </p>
-                            )}
-                          </div>
-                          <div className="flex gap-2">
-                            <Button
-                              type="submit"
-                              className="flex-1 bg-green-500 hover:bg-green-600"
-                            >
-                              Submit Transaction ID
-                            </Button>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              className="border-red-500/20"
-                              onClick={() => setShowVerification(false)}
-                            >
-                              Cancel
-                            </Button>
-                          </div>
-                        </form>
-                      </motion.div>
-                    )}
+                      </form>
+                    </motion.div>
 
                     <div className="space-y-4">
                       <div className="bg-white/5 p-4 rounded-lg space-y-3">
