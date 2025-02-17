@@ -537,8 +537,8 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
       className="transform-gpu max-w-xl mx-auto"
     >
       <AnimatePresence mode="wait">
-        <Card className="overflow-hidden backdrop-blur-lg bg-gradient-to-br from-blue-950/90 to-indigo-900/90 border-blue-500/20 mb-4 shadow-2xl hover:shadow-blue-500/10 transition-all duration-300 rounded-xl">
-          <div className="p-6 border-b border-blue-500/20 bg-gradient-to-r from-blue-950/50 to-indigo-900/50">
+        <Card className="overflow-hidden backdrop-blur-lg bg-gradient-to-br from-slate-950/90 to-blue-900/90 border-blue-500/20 mb-4 shadow-2xl hover:shadow-blue-500/10 transition-all duration-300 rounded-xl">
+          <div className="p-6 border-b border-blue-500/20 bg-gradient-to-r from-slate-950/50 to-blue-900/50">
             <motion.div
               initial={{ x: -20 }}
               animate={{ x: 0 }}
@@ -564,15 +564,9 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
                   </Badge>
                 </h2>
                 <motion.p
-                  className="text-lg mt-2"
-                  style={{
-                    backgroundSize: '200% auto',
-                    animation: 'gradient 3s linear infinite'
-                  }}
+                  className="text-lg mt-2 text-gray-300"
                 >
-                  <span className="bg-gradient-to-r from-blue-300 via-purple-400 to-blue-500 animate-gradient bg-clip-text text-transparent bg-[length:200%_auto]">
-                    {upi.storeName}
-                  </span>
+                  {upi.storeName}
                 </motion.p>
               </div>
               <motion.div
