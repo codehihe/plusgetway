@@ -66,7 +66,7 @@ const generateUpiLink = (upi: UpiId, amount: string, reference: string) => {
       tr: cleanReference,
       mc: upi.merchantCategory || "0000",
       url: window.location.origin,
-      sign: btoa(`${upi.upiId}:${cleanAmount}:${cleanReference}`), 
+      sign: btoa(`${upi.upiId}:${cleanAmount}:${cleanReference}`),
     });
 
     return `upi://pay?${params.toString()}`;
@@ -537,36 +537,51 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
       className="transform-gpu max-w-xl mx-auto"
     >
       <AnimatePresence mode="wait">
-        <Card className="overflow-hidden backdrop-blur-lg bg-gradient-to-br from-red-950/90 to-gray-900/90 border-red-500/20 mb-4 shadow-2xl hover:shadow-red-500/10 transition-all duration-300 rounded-xl">
-          <div className="p-6 border-b border-red-500/20 bg-gradient-to-r from-red-950/50 to-gray-900/50">
+        <Card className="overflow-hidden backdrop-blur-lg bg-gradient-to-br from-blue-950/90 to-indigo-900/90 border-blue-500/20 mb-4 shadow-2xl hover:shadow-blue-500/10 transition-all duration-300 rounded-xl">
+          <div className="p-6 border-b border-blue-500/20 bg-gradient-to-r from-blue-950/50 to-indigo-900/50">
             <motion.div
               initial={{ x: -20 }}
               animate={{ x: 0 }}
               className="flex items-center justify-between"
             >
               <div>
-                <h2 className="text-2xl font-bold text-red-400 flex items-center gap-2">
-                  <IndianRupee className="w-6 h-6" />
+                <h2 className="text-2xl font-bold text-blue-400 flex items-center gap-2">
+                  <motion.div
+                    whileHover={{ rotate: 360, scale: 1.2 }}
+                    transition={{ duration: 0.5 }}
+                  >
+                    <IndianRupee className="w-6 h-6" />
+                  </motion.div>
                   <span>{upi.merchantName}</span>
-                  <Badge variant="secondary" className="ml-2 bg-red-500/20 text-red-300">
-                    Verified
+                  <Badge variant="secondary" className="ml-2 bg-blue-500/20 text-blue-300">
+                    <motion.span
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ repeat: Infinity, duration: 2 }}
+                    >
+                      Verified
+                    </motion.span>
                   </Badge>
                 </h2>
                 <motion.p
-                  className="text-lg mt-2 bg-gradient-to-r from-red-400 via-orange-400 to-yellow-400 bg-clip-text text-transparent font-medium animate-gradient"
+                  className="text-lg mt-2"
                   style={{
                     backgroundSize: '200% auto',
                     animation: 'gradient 3s linear infinite'
                   }}
                 >
-                  <span className="bg-gradient-to-r from-red-300 via-purple-400 to-red-500 animate-gradient bg-clip-text text-transparent bg-[length:200%_auto]">
+                  <span className="bg-gradient-to-r from-blue-300 via-purple-400 to-blue-500 animate-gradient bg-clip-text text-transparent bg-[length:200%_auto]">
                     {upi.storeName}
                   </span>
                 </motion.p>
               </div>
-              <div className="bg-red-500/10 p-3 rounded-full">
-                <QrCode className="w-8 h-8 text-red-400" />
-              </div>
+              <motion.div
+                whileHover={{ rotate: 360, scale: 1.2 }}
+                transition={{ type: "spring", stiffness: 260, damping: 20 }}
+                className="bg-blue-500/10 p-3 rounded-full"
+              >
+                <QrCode className="w-8 h-8 text-blue-400" />
+              </motion.div>
             </motion.div>
           </div>
 
@@ -575,12 +590,20 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
               <motion.form
                 onSubmit={form.handleSubmit(onSubmit)}
                 className="space-y-6"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
               >
                 <div className="space-y-3">
-                  <label className="text-lg font-medium text-red-400">Enter Amount</label>
+                  <label className="text-lg font-medium text-blue-400">Enter Amount</label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                      <IndianRupee className="h-5 w-5 text-red-400" />
+                      <motion.div
+                        whileHover={{ scale: 1.2 }}
+                        transition={{ type: "spring", stiffness: 300 }}
+                      >
+                        <IndianRupee className="h-5 w-5 text-blue-400" />
+                      </motion.div>
                     </div>
                     <Input
                       type="number"
@@ -589,7 +612,7 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
                       min="0.01"
                       max="100000"
                       {...form.register("amount")}
-                      className="pl-10 bg-white/5 border-red-500/20 text-white focus:ring-red-500/30 transition-all duration-300 text-xl font-medium h-14"
+                      className="pl-10 bg-white/5 border-blue-500/20 text-white focus:ring-blue-500/30 transition-all duration-300 text-xl font-medium h-14 rounded-xl"
                     />
                   </div>
                   {form.formState.errors.amount && (
@@ -604,37 +627,40 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
                 </div>
 
                 <div className="grid grid-cols-3 gap-6">
-                  <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    className="flex flex-col items-center p-4 bg-white/5 rounded-lg border border-red-500/10 hover:border-red-500/20 transition-all duration-300"
-                  >
-                    <Shield className="w-8 h-8 text-green-400 mb-2" />
-                    <span className="text-sm font-medium text-gray-300">Secure</span>
-                  </motion.div>
-                  <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    className="flex flex-col items-center p-4 bg-white/5 rounded-lg border border-red-500/10 hover:border-red-500/20 transition-all duration-300"
-                  >
-                    <Clock className="w-8 h-8 text-blue-400 mb-2" />
-                    <span className="text-sm font-medium text-gray-300">Instant</span>
-                  </motion.div>
-                  <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    className="flex flex-col items-center p-4 bg-white/5 rounded-lg border border-red-500/10 hover:border-red-500/20 transition-all duration-300"
-                  >
-                    <Smartphone className="w-8 h-8 text-purple-400 mb-2" />
-                    <span className="text-sm font-medium text-gray-300">Mobile</span>
-                  </motion.div>
+                  {[
+                    { icon: Shield, text: "Secure", color: "green" },
+                    { icon: Clock, text: "Instant", color: "blue" },
+                    { icon: Smartphone, text: "Mobile", color: "purple" }
+                  ].map((item, index) => (
+                    <motion.div
+                      key={index}
+                      whileHover={{ scale: 1.05, y: -5 }}
+                      className="flex flex-col items-center p-4 bg-white/5 rounded-lg border border-blue-500/10 hover:border-blue-500/20 transition-all duration-300"
+                    >
+                      <motion.div
+                        whileHover={{ rotate: 360 }}
+                        transition={{ duration: 0.5 }}
+                      >
+                        <item.icon className={`w-8 h-8 text-${item.color}-400 mb-2`} />
+                      </motion.div>
+                      <span className="text-sm font-medium text-gray-300">{item.text}</span>
+                    </motion.div>
+                  ))}
                 </div>
+
                 <Button
                   type="submit"
                   onClick={form.handleSubmit(onSubmit)}
-                  className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 transform hover:scale-[1.02] transition-all duration-300"
+                  className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 transform hover:scale-[1.02] transition-all duration-300 rounded-xl h-12"
                 >
-                  <ShoppingCart className="w-4 h-4 mr-2" />
-                  Proceed to Pay
+                  <motion.div
+                    className="flex items-center justify-center gap-2"
+                    whileHover={{ scale: 1.05 }}
+                  >
+                    <ShoppingCart className="w-4 h-4" />
+                    Proceed to Pay
+                  </motion.div>
                 </Button>
-
                 <div className="space-y-3 bg-white/5 p-4 rounded-lg">
                   <p className="text-sm font-medium text-gray-400">Transaction Details</p>
                   <div className="flex justify-between text-sm">
@@ -701,7 +727,7 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
                       className="text-center space-y-2"
                     >
                       <p className="text-white font-medium">Scan QR with any UPI app</p>
-                      <p className="text-red-400 text-2xl font-bold">
+                      <p className="text-blue-400 text-2xl font-bold">
                         {formatAmount(form.getValues("amount"))}
                       </p>
                       <p className="text-gray-400 text-sm">To: {upi.merchantName}</p>
@@ -711,7 +737,7 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
                     <div className="flex gap-2">
                       <Button
                         variant="outline"
-                        className="flex-1 border-red-500/20 text-red-400 hover:bg-red-500/10 transition-all duration-300"
+                        className="flex-1 border-blue-500/20 text-blue-400 hover:bg-blue-500/10 transition-all duration-300"
                         onClick={() => {
                           const amount = form.getValues("amount");
                           const paymentLink = `upi://pay?pa=${upi.upiId}&pn=${encodeURIComponent(upi.merchantName)}&am=${amount}&cu=INR`;
@@ -723,7 +749,7 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
                       </Button>
                       <Button
                         variant="outline"
-                        className="flex-1 border-red-500/20 text-red-400 hover:bg-red-500/10 transition-all duration-300"
+                        className="flex-1 border-blue-500/20 text-blue-400 hover:bg-blue-500/10 transition-all duration-300"
                         onClick={() => setShowQR(false)}
                       >
                         Cancel Payment
@@ -737,13 +763,13 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
                     >
                       <form onSubmit={verificationForm.handleSubmit(handleVerificationSubmit)} className="space-y-4">
                         <div className="space-y-2">
-                          <label className="text-sm font-medium text-red-400">
+                          <label className="text-sm font-medium text-blue-400">
                             Enter your UPI Transaction ID
                           </label>
                           <Input
                             type="text"
                             {...verificationForm.register("transactionId")}
-                            className="bg-white/10 border-red-500/20"
+                            className="bg-white/10 border-blue-500/20"
                             placeholder="Enter the transaction ID from your UPI app"
                           />
                           {verificationForm.formState.errors.transactionId && (
@@ -763,12 +789,12 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
 
                     <div className="space-y-4">
                       <div className="bg-white/5 p-4 rounded-lg space-y-3">
-                        <h4 className="text-red-400 font-medium">Payment Security</h4>
+                        <h4 className="text-blue-400 font-medium">Payment Security</h4>
                         <SecurityVerification status={paymentStatus}/>
                       </div>
 
                       <div className="bg-white/5 p-4 rounded-lg space-y-3">
-                        <h4 className="text-red-400 font-medium">Transaction Details</h4>
+                        <h4 className="text-blue-400 font-medium">Transaction Details</h4>
                         <div className="space-y-2 text-sm">
                           <div className="flex justify-between">
                             <span className="text-gray-400">Merchant</span>
@@ -798,7 +824,7 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
                       </div>
                       <Progress
                         value={(timeLeft / PAYMENT_TIMEOUT) * 100}
-                        className="h-1 bg-red-950"
+                        className="h-1 bg-blue-950"
                       />
                     </div>
                   </>
