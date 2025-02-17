@@ -148,6 +148,46 @@ export async function registerRoutes(app: Express) {
     }
   });
 
+  app.post("/api/transactions/verify", async (req, res) => {
+    try {
+      const { reference, transactionId } = req.body;
+      if (!reference || !transactionId) {
+        res.status(400).json({ message: "Missing required fields" });
+        return;
+      }
+
+      const transaction = await storage.updateTransaction(reference, {
+        transactionId,
+        status: "pending"
+      });
+
+      res.json({ success: true, transaction });
+    } catch (error) {
+      console.error("Transaction verification error:", error);
+      res.status(500).json({ message: "Failed to verify transaction" });
+    }
+  });
+
+  app.post("/api/transactions/:reference/verify", async (req, res) => {
+    try {
+      const { reference } = req.params;
+      const { status } = req.body;
+
+      if (!['success', 'failed'].includes(status)) {
+        res.status(400).json({ message: "Invalid status" });
+        return;
+      }
+
+      const transaction = await storage.updateTransaction(reference, { status });
+      broadcastPaymentUpdate(reference, status as 'success' | 'failed');
+
+      res.json({ success: true, transaction });
+    } catch (error) {
+      console.error("Admin verification error:", error);
+      res.status(500).json({ message: "Failed to verify transaction" });
+    }
+  });
+
   app.get("/api/transactions/:reference", async (req, res) => {
     try {
       const transaction = await storage.getTransaction(req.params.reference);

@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { ArrowLeft, CheckCircle, XCircle, Clock } from "lucide-react";
 import { motion } from "framer-motion";
+import { apiRequest } from "@/utils/api"; // Assuming this function exists for API calls
 
 export default function TransactionHistory() {
-  const { data: transactions, isLoading } = useQuery<Transaction[]>({
+  const { data: transactions, isLoading, refetch } = useQuery<Transaction[]>({
     queryKey: ["/api/transactions"],
   });
 
@@ -29,6 +30,16 @@ export default function TransactionHistory() {
         return <XCircle className="w-5 h-5 text-red-500" />;
       default:
         return <Clock className="w-5 h-5 text-yellow-500" />;
+    }
+  };
+
+  const handleVerifyTransaction = async (reference: string, status: "success" | "failed") => {
+    try {
+      await apiRequest("POST", `/api/transactions/${reference}/verify`, { status });
+      refetch();
+    } catch (error) {
+      console.error("Error verifying transaction:", error);
+      // Add error handling as needed (e.g., display an error message to the user)
     }
   };
 
@@ -71,6 +82,25 @@ export default function TransactionHistory() {
                   <div className="text-right">
                     <p className="text-xs text-gray-400">{tx.reference}</p>
                     <p className="text-xs text-gray-500">{tx.upiId}</p>
+                    {tx.status === "pending" && (
+                      <div className="flex gap-2 mt-2">
+                        <Button
+                          size="sm"
+                          variant="default"
+                          className="bg-green-500 hover:bg-green-600"
+                          onClick={() => handleVerifyTransaction(tx.reference, "success")}
+                        >
+                          Accept
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => handleVerifyTransaction(tx.reference, "failed")}
+                        >
+                          Decline
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </motion.div>
               ))}

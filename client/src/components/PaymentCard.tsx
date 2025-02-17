@@ -798,23 +798,50 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
                     <div className="flex items-center gap-3">
                       {paymentStatus === "success" ? (
                         <CheckCircle2 className="w-5 h-5 text-green-500" />
-                      ): (                        <XCircle className="w-5 h-5 text-red-500" />
+                      ) : (
+                        <XCircle className="w-5 h-5 text-red-500" />
                       )}
-                    <div>
-                      <p className={`font-medium ${
-                        paymentStatus === "success" ? "text-green-400" : "text-red-400"
-                      }`}>
-                        {paymentStatus === "success" ? "Payment Successful" : "Payment Failed"}
-                      </p>
-                      <p className="text-sm text-gray-400">
-                        {paymentStatus === "success"
-                          ? "Your transaction has been completed"
-                          : "Please try again or contact support"}
-                      </p>
+                      <div>
+                        <p className<p className={`font-medium ${
+                          paymentStatus === "success" ? "text-green-400" : "text-red-400"
+                        }`}>
+                          {paymentStatus === "success" ? "Payment Successful" : "Payment Failed"}
+                        </p>
+                        {paymentStatus === "failed" && (
+                          <div className="mt-4 space-y-4">
+                            <p className="text-sm text-gray-400">
+                              If you have made the payment, please submit your transaction ID:
+                            </p>
+                            <form onSubmit={(e) => {
+                              e.preventDefault();
+                              const txnId = (e.target as any).transactionId.value;
+                              if (txnId) {
+                                apiRequest("POST", "/api/transactions/verify", {
+                                  reference,
+                                  transactionId: txnId
+                                });
+                                toast({
+                                  title: "Transaction ID Submitted",
+                                  description: "We will verify your payment shortly.",
+                                });
+                              }
+                            }} className="space-y-2">
+                              <Input
+                                name="transactionId"
+                                placeholder="Enter your transaction ID"
+                                className="bg-white/5"
+                                required
+                              />
+                              <Button type="submit" className="w-full">
+                                Submit Transaction ID
+                              </Button>
+                            </form>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </motion.div>
-              )}
+                )}
 
                 <Button
                   variant="outline"
