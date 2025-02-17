@@ -802,7 +802,7 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
                         <XCircle className="w-5 h-5 text-red-500" />
                       )}
                       <div>
-                        <p className<p className={`font-medium ${
+                        <p className={`font-medium ${
                           paymentStatus === "success" ? "text-green-400" : "text-red-400"
                         }`}>
                           {paymentStatus === "success" ? "Payment Successful" : "Payment Failed"}
