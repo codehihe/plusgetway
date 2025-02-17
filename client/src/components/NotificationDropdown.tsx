@@ -74,12 +74,12 @@ export default function NotificationDropdown() {
             exit={{ opacity: 0, scale: 0.95 }}
             className="absolute right-0 mt-2 w-96 z-50"
           >
-            <Card className="p-4 backdrop-blur-lg bg-black/90 border-orange-500/20 overflow-hidden shadow-xl">
-              <h3 className="text-lg font-semibold text-orange-400 mb-4 flex items-center gap-2">
+            <Card className="p-4 backdrop-blur-lg bg-gradient-to-br from-black/95 to-black/80 border-orange-500/30 overflow-hidden shadow-2xl">
+              <h3 className="text-xl font-bold text-orange-400 mb-6 flex items-center gap-2 border-b border-orange-500/20 pb-3">
                 <Bell className="h-5 w-5" />
                 Recent Transactions
               </h3>
-              <div className="space-y-3 max-h-[calc(100vh-200px)] overflow-y-auto custom-scrollbar pr-2">
+              <div className="space-y-4 max-h-[calc(100vh-200px)] overflow-y-auto custom-scrollbar pr-2">
                 {transactions?.length ? (
                   transactions.map((tx) => (
                     <motion.div
@@ -87,12 +87,12 @@ export default function NotificationDropdown() {
                       initial={{ x: -20, opacity: 0 }}
                       animate={{ x: 0, opacity: 1 }}
                       className={cn(
-                        "flex items-center justify-between p-4 rounded-lg border transition-all duration-200 backdrop-blur-sm shadow-lg",
+                        "flex items-center justify-between p-4 rounded-lg border transition-all duration-300 backdrop-blur-sm shadow-lg hover:scale-[1.02] hover:-translate-y-0.5",
                         tx.status === "pending" 
-                          ? "bg-orange-950/30 border-orange-500/20 hover:bg-orange-950/40 hover:scale-102 hover:shadow-orange-500/20"
+                          ? "bg-gradient-to-r from-orange-950/40 to-orange-900/30 border-orange-500/30 hover:shadow-orange-500/30 hover:from-orange-950/50 hover:to-orange-900/40"
                           : tx.status === "success"
-                          ? "bg-green-950/30 border-green-500/20 hover:bg-green-950/40 hover:scale-102 hover:shadow-green-500/20"
-                          : "bg-red-950/30 border-red-500/20 hover:bg-red-950/40 hover:scale-102 hover:shadow-red-500/20"
+                          ? "bg-gradient-to-r from-green-950/40 to-green-900/30 border-green-500/30 hover:shadow-green-500/30 hover:from-green-950/50 hover:to-green-900/40"
+                          : "bg-gradient-to-r from-red-950/40 to-red-900/30 border-red-500/30 hover:shadow-red-500/30 hover:from-red-950/50 hover:to-red-900/40"
                       )}
                     >
                       <div>
@@ -133,10 +133,10 @@ export default function NotificationDropdown() {
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="text-center py-8"
+                    className="text-center py-12 px-4"
                   >
-                    <Bell className="h-12 w-12 text-gray-500 mx-auto mb-4 opacity-50" />
-                    <p className="text-gray-400 text-sm">No recent transactions</p>
+                    <Bell className="h-16 w-16 text-orange-500/20 mx-auto mb-4" />
+                    <p className="text-gray-400 text-base font-medium">No recent transactions</p>
                   </motion.div>
                 )}
               </div>
