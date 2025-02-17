@@ -41,7 +41,7 @@ export async function registerRoutes(app: Express) {
       // Check if UPI ID already exists
       const existingUpi = await storage.getUpiIdByAddress(result.data.upiId);
       if (existingUpi) {
-        res.status(409).json({ 
+        res.status(409).json({
           message: "This UPI ID already exists",
           code: "DUPLICATE_UPI"
         });
@@ -52,7 +52,7 @@ export async function registerRoutes(app: Express) {
       res.json(upiId);
     } catch (error: any) {
       console.error("Error adding UPI ID:", error);
-      res.status(500).json({ 
+      res.status(500).json({
         message: "Failed to add UPI ID",
         error: error.message,
         code: "UPI_ADD_FAILED"
@@ -94,9 +94,9 @@ export async function registerRoutes(app: Express) {
     try {
       const result = insertTransactionSchema.safeParse(req.body);
       if (!result.success) {
-        res.status(400).json({ 
-          message: "Invalid transaction details", 
-          errors: result.error.errors 
+        res.status(400).json({
+          message: "Invalid transaction details",
+          errors: result.error.errors
         });
         return;
       }
@@ -104,7 +104,7 @@ export async function registerRoutes(app: Express) {
       // Validate UPI ID status
       const upiDetails = await storage.getUpiIdByAddress(result.data.upiId);
       if (!upiDetails) {
-        res.status(404).json({ 
+        res.status(404).json({
           message: "Invalid UPI ID. Please check and try again.",
           code: "INVALID_UPI"
         });
@@ -112,7 +112,7 @@ export async function registerRoutes(app: Express) {
       }
 
       if (upiDetails.blockedAt) {
-        res.status(403).json({ 
+        res.status(403).json({
           message: "This UPI ID is blocked. Please contact support.",
           code: "UPI_BLOCKED"
         });
@@ -140,7 +140,7 @@ export async function registerRoutes(app: Express) {
       });
     } catch (error) {
       console.error("Transaction creation error:", error);
-      res.status(500).json({ 
+      res.status(500).json({
         message: "Failed to process transaction. Please try again.",
         error: error instanceof Error ? error.message : "Unknown error",
         code: "TRANSACTION_FAILED"
@@ -156,10 +156,8 @@ export async function registerRoutes(app: Express) {
         return;
       }
 
-      const transaction = await storage.updateTransaction(reference, {
-        transactionId,
-        status: "pending"
-      });
+      const transaction = await storage.updateTransactionStatus(reference, "pending");
+      await storage.updateTransactionDetails(reference, { transactionId });
 
       res.json({ success: true, transaction });
     } catch (error) {
@@ -178,7 +176,7 @@ export async function registerRoutes(app: Express) {
         return;
       }
 
-      const transaction = await storage.updateTransaction(reference, { status });
+      const transaction = await storage.updateTransactionStatus(reference, status);
       broadcastPaymentUpdate(reference, status as 'success' | 'failed');
 
       res.json({ success: true, transaction });
@@ -204,7 +202,7 @@ export async function registerRoutes(app: Express) {
       res.json(transaction);
     } catch (error) {
       console.error("Transaction fetch error:", error);
-      res.status(500).json({ 
+      res.status(500).json({
         message: "Failed to fetch transaction",
         error: error instanceof Error ? error.message : "Unknown error"
       });
@@ -220,7 +218,7 @@ export async function registerRoutes(app: Express) {
       // This should be implemented based on your UPI gateway provider's specifications
 
       if (!reference || !status) {
-        res.status(400).json({ 
+        res.status(400).json({
           message: "Missing required fields",
           code: "INVALID_WEBHOOK_DATA"
         });
@@ -229,7 +227,7 @@ export async function registerRoutes(app: Express) {
 
       // Validate status
       if (!['success', 'failed'].includes(status)) {
-        res.status(400).json({ 
+        res.status(400).json({
           message: "Invalid status",
           code: "INVALID_STATUS"
         });
@@ -242,14 +240,14 @@ export async function registerRoutes(app: Express) {
       // Broadcast status update via WebSocket
       broadcastPaymentUpdate(reference, status);
 
-      res.json({ 
-        success: true, 
+      res.json({
+        success: true,
         transaction,
         message: `Transaction ${status === 'success' ? 'completed' : 'failed'} successfully`
       });
     } catch (error) {
       console.error("Webhook processing error:", error);
-      res.status(500).json({ 
+      res.status(500).json({
         message: "Failed to process webhook",
         error: error instanceof Error ? error.message : "Unknown error",
         code: "WEBHOOK_FAILED"

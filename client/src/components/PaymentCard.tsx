@@ -451,7 +451,7 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
 
       toast({
         title: "❌ Payment Error",
-        description: errorMessage.includes("blocked by authorities") 
+        description: errorMessage.includes("blocked by authorities")
           ? "For security reasons, sending money from your account for this payment is not permitted."
           : `${errorMessage}. Please try again.`,
         variant: "destructive",
@@ -484,15 +484,15 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
   }
 
   return (
-    <AnimatePresence mode="wait">
-      <motion.div
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.9, opacity: 0 }}
-        whileHover={{ scale: 1.02 }}
-        transition={{ type: "spring", stiffness: 300, damping: 25 }}
-        className="transform-gpu max-w-xl mx-auto"
-      >
+    <motion.div
+      initial={{ scale: 0.9, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      exit={{ scale: 0.9, opacity: 0 }}
+      whileHover={{ scale: 1.02 }}
+      transition={{ type: "spring", stiffness: 300, damping: 25 }}
+      className="transform-gpu max-w-xl mx-auto"
+    >
+      <AnimatePresence mode="wait">
         <Card className="overflow-hidden backdrop-blur-lg bg-gradient-to-br from-red-950/90 to-gray-900/90 border-red-500/20 mb-4 shadow-2xl hover:shadow-red-500/10 transition-all duration-300 rounded-xl">
           <div className="p-6 border-b border-red-500/20 bg-gradient-to-r from-red-950/50 to-gray-900/50">
             <motion.div
@@ -810,7 +810,7 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
                         {paymentStatus === "failed" && (
                           <div className="mt-4 space-y-4">
                             <p className="text-sm text-gray-400">
-                              If you have made the payment, please submit your transaction ID:
+                              If you have made the payment, please submit your UPI transaction ID:
                             </p>
                             <form onSubmit={(e) => {
                               e.preventDefault();
@@ -819,20 +819,28 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
                                 apiRequest("POST", "/api/transactions/verify", {
                                   reference,
                                   transactionId: txnId
-                                });
-                                toast({
-                                  title: "Transaction ID Submitted",
-                                  description: "We will verify your payment shortly.",
+                                }).then(() => {
+                                  toast({
+                                    title: "✅ Transaction ID Submitted",
+                                    description: "We'll verify your payment and update the status shortly.",
+                                    variant: "default",
+                                  });
+                                }).catch(() => {
+                                  toast({
+                                    title: "❌ Submission Failed",
+                                    description: "Unable to submit transaction ID. Please try again.",
+                                    variant: "destructive",
+                                  });
                                 });
                               }
                             }} className="space-y-2">
                               <Input
+                                type="text"
                                 name="transactionId"
-                                placeholder="Enter your transaction ID"
-                                className="bg-white/5"
-                                required
+                                placeholder="Enter your UPI transaction ID"
+                                className="mb-2 bg-white/10 border-red-500/20"
                               />
-                              <Button type="submit" className="w-full">
+                              <Button type="submit" variant="outline" size="sm" className="w-full">
                                 Submit Transaction ID
                               </Button>
                             </form>
@@ -854,8 +862,8 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
             )}
           </div>
         </Card>
-      </motion.div>
-    </AnimatePresence>
+      </AnimatePresence>
+    </motion.div>
   );
 };
 
