@@ -20,7 +20,7 @@ import { getWebSocketUrl } from "@/lib/utils";
 import { v4 as uuidv4 } from 'uuid';
 import { useQuery } from "@tanstack/react-query";
 
-const PAYMENT_TIMEOUT = 180; // 3 minutes in seconds
+const PAYMENT_TIMEOUT = 60; // 1 minute in seconds
 const VERIFICATION_INTERVAL = 3000; // 3 seconds
 
 const paymentSchema = z.object({
@@ -717,6 +717,28 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
                       <p className="text-gray-400 text-sm">To: {upi.merchantName}</p>
                       <p className="text-gray-500 text-xs">Reference: {reference}</p>
                     </motion.div>
+
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        className="flex-1 border-red-500/20 text-red-400 hover:bg-red-500/10 transition-all duration-300"
+                        onClick={() => {
+                          const amount = form.getValues("amount");
+                          const paymentLink = `upi://pay?pa=${upi.upiId}&pn=${encodeURIComponent(upi.merchantName)}&am=${amount}&cu=INR`;
+                          window.open(paymentLink, '_blank');
+                        }}
+                      >
+                        <ExternalLink className="w-4 h-4 mr-2" />
+                        Open in App
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="flex-1 border-red-500/20 text-red-400 hover:bg-red-500/10 transition-all duration-300"
+                        onClick={() => setShowQR(false)}
+                      >
+                        Cancel Payment
+                      </Button>
+                    </div>
 
                     {paymentStatus === "pending" && !showVerification && (
                       <motion.div
