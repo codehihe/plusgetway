@@ -364,6 +364,10 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
 
   const onSubmit = async (data: PaymentFormData) => {
     try {
+      // Reset any existing error states
+      setPaymentStatus("pending");
+      setReference("");
+
       const amount = parseFloat(data.amount);
       if (amount < 1) {
         toast({
@@ -405,6 +409,7 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
 
       // Generate reference ID
       const txReference = uuidv4();
+      setReference(txReference);
 
       // Perform security checks
       const securityChecks = await performSecurityChecks(data.amount);
@@ -434,14 +439,13 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
         throw new Error("Invalid transaction response");
       }
 
-      setReference(txReference);
       setTimeLeft(PAYMENT_TIMEOUT);
-      setPaymentStatus("pending");
       setShowQR(true);
 
     } catch (error: any) {
       console.error("Payment initiation error:", error);
       setPaymentStatus("failed");
+      setReference("");
 
       const errorMessage = error instanceof Error ? error.message : "Unable to initiate payment";
 
@@ -793,25 +797,24 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
                   >
                     <div className="flex items-center gap-3">
                       {paymentStatus === "success" ? (
-                        <CheckCircle2 className="w-5 h-5 text-green500" />
-                      ) : (
-                        <XCircle className="w-5 h-5 text-red-500" />
+                        <CheckCircle2 className="w-5 h-5 text-green-500" />
+                      ): (                        <XCircle className="w-5 h-5 text-red-500" />
                       )}
-                      <div>
-                        <p className={`font-medium ${
-                          paymentStatus === "success" ? "text-green-400" : "text-red-400"
-                        }`}>
-                          {paymentStatus === "success" ? "Payment Successful" : "Payment Failed"}
-                        </p>
-                        <p className="text-sm text-gray-400">
-                          {paymentStatus === "success"
-                            ? "Your transaction has been completed"
-                            : "Please try again or contact support"}
-                        </p>
-                      </div>
+                    <div>
+                      <p className={`font-medium ${
+                        paymentStatus === "success" ? "text-green-400" : "text-red-400"
+                      }`}>
+                        {paymentStatus === "success" ? "Payment Successful" : "Payment Failed"}
+                      </p>
+                      <p className="text-sm text-gray-400">
+                        {paymentStatus === "success"
+                          ? "Your transaction has been completed"
+                          : "Please try again or contact support"}
+                      </p>
                     </div>
-                  </motion.div>
-                )}
+                  </div>
+                </motion.div>
+              )}
 
                 <Button
                   variant="outline"
