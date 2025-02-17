@@ -315,8 +315,7 @@ export class DatabaseStorage implements IStorage {
     const [transaction] = await db
       .select()
       .from(transactions)
-      .where(eq(transactions.reference, reference))
-      .where(isNull(transactions.deletedAt));
+      .where(eq(transactions.reference, reference));
     return transaction;
   }
 
@@ -324,8 +323,7 @@ export class DatabaseStorage implements IStorage {
     return await db
       .select()
       .from(transactions)
-      .orderBy(desc(transactions.timestamp))
-      .where(isNull(transactions.deletedAt));
+      .orderBy(desc(transactions.timestamp));
   }
 
   async getDailyTransactions(upiId: string): Promise<Transaction[]> {

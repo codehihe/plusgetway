@@ -39,8 +39,8 @@ export const upiIds = pgTable("upi_ids", {
 // Enhanced Transactions table with user references
 export const transactions = pgTable("transactions", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(), // Added user reference
-  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  userId: integer("user_id").notNull().default(1), // Default user for now
+  amount: text("amount").notNull(),
   upiId: text("upi_id").notNull(),
   merchantName: text("merchant_name").notNull(),
   reference: text("reference").notNull().unique(),
@@ -58,7 +58,7 @@ export const transactions = pgTable("transactions", {
   deviceInfo: text("device_info"),
   ipAddress: text("ip_address"),
   geolocation: text("geolocation"),
-  verifiedBy: integer("verified_by"), // Added admin verification
+  verifiedBy: integer("verified_by"),
   verifiedAt: timestamp("verified_at"),
 });
 
@@ -84,7 +84,7 @@ export const insertUserSchema = createInsertSchema(users)
       .regex(/^[a-zA-Z0-9_]+$/, "Username can only contain letters, numbers, and underscores"),
     password: z.string()
       .min(8, "Password must be at least 8 characters")
-      .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/, 
+      .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/,
         "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character"),
     email: z.string()
       .email("Invalid email address"),
@@ -97,14 +97,7 @@ export const insertUserSchema = createInsertSchema(users)
 
 // Keep existing schemas
 export const insertUpiSchema = createInsertSchema(upiIds)
-  .omit({ 
-    id: true, 
-    isActive: true, 
-    blockedAt: true, 
-    deletedAt: true, 
-    createdAt: true, 
-    updatedAt: true 
-  })
+  .omit({ id: true, isActive: true, blockedAt: true, deletedAt: true, createdAt: true, updatedAt: true })
   .extend({
     upiId: z.string()
       .min(5, "UPI ID must be at least 5 characters")
@@ -128,15 +121,7 @@ export const insertUpiSchema = createInsertSchema(upiIds)
 
 // Enhanced transaction schema with user validation
 export const insertTransactionSchema = createInsertSchema(transactions)
-  .omit({ 
-    id: true,
-    timestamp: true, 
-    completedAt: true, 
-    failedAt: true, 
-    retryCount: true,
-    verifiedBy: true,
-    verifiedAt: true
-  })
+  .omit({ id: true, timestamp: true, completedAt: true, failedAt: true, retryCount: true, verifiedBy: true, verifiedAt: true })
   .extend({
     amount: z.string()
       .min(1, "Amount is required")
