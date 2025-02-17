@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { SiGooglepay, SiPhonepe, SiPaytm } from "react-icons/si";
 import { getWebSocketUrl } from "@/lib/utils";
 import { v4 as uuidv4 } from 'uuid';
+import { useQuery } from "@tanstack/react-query";
 
 const PAYMENT_TIMEOUT = 180; // 3 minutes in seconds
 const VERIFICATION_INTERVAL = 3000; // 3 seconds
@@ -28,12 +29,16 @@ const paymentSchema = z.object({
     .regex(/^\d+(\.\d{1,2})?$/, "Please enter a valid amount")
     .refine((val) => parseFloat(val) >= 1, "Minimum amount is ₹1")
     .refine((val) => parseFloat(val) <= 100000, "Amount cannot exceed ₹1,00,000"),
+});
+
+const verificationSchema = z.object({
   transactionId: z.string()
     .min(1, "Transaction ID is required")
     .max(50, "Transaction ID is too long"),
 });
 
 type PaymentFormData = z.infer<typeof paymentSchema>;
+type VerificationFormData = z.infer<typeof verificationSchema>;
 
 // Enhanced UPI link generation with security parameters
 const generateUpiLink = (upi: UpiId, amount: string, reference: string) => {
@@ -134,6 +139,7 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
   const [timeLeft, setTimeLeft] = useState(PAYMENT_TIMEOUT);
   const [paymentStatus, setPaymentStatus] = useState<"pending" | "success" | "failed" | "processing">("pending");
   const [wsConnected, setWsConnected] = useState(false);
+  const [showVerification, setShowVerification] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
   const { toast } = useToast();
 
@@ -141,6 +147,12 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
     resolver: zodResolver(paymentSchema),
     defaultValues: {
       amount: "",
+    },
+  });
+
+  const verificationForm = useForm<VerificationFormData>({
+    resolver: zodResolver(verificationSchema),
+    defaultValues: {
       transactionId: "",
     },
   });
@@ -371,6 +383,7 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
       // Reset any existing error states
       setPaymentStatus("pending");
       setReference("");
+      setShowVerification(false);
 
       const amount = parseFloat(data.amount);
       if (amount < 1) {
@@ -424,11 +437,10 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
         merchantName: upi.merchantName,
         status: "pending",
         deviceInfo: navigator.userAgent || "unknown",
-        ipAddress: "127.0.0.1", // Use localhost as fallback
+        ipAddress: "127.0.0.1",
         paymentMethod: "upi",
         securityChecks,
         reference: txReference,
-        transactionId: data.transactionId, // Include transaction ID
       });
 
       if (!response || !response.ok) {
@@ -451,6 +463,7 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
       console.error("Payment initiation error:", error);
       setPaymentStatus("failed");
       setReference("");
+      setShowVerification(false);
 
       const errorMessage = error instanceof Error ? error.message : "Unable to initiate payment";
 
@@ -461,6 +474,42 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
           : `${errorMessage}. Please try again.`,
         variant: "destructive",
         duration: 7000,
+      });
+    }
+  };
+
+  const handleVerificationSubmit = async (data: VerificationFormData) => {
+    try {
+      if (!reference) {
+        toast({
+          title: "❌ Error",
+          description: "Invalid transaction reference",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const response = await apiRequest("POST", "/api/transactions/verify", {
+        reference,
+        transactionId: data.transactionId
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to submit transaction ID");
+      }
+
+      toast({
+        title: "✅ Transaction ID Submitted",
+        description: "We'll verify your payment and update the status shortly.",
+        variant: "default",
+      });
+
+      setShowVerification(false);
+    } catch (error) {
+      toast({
+        title: "❌ Submission Failed",
+        description: "Unable to submit transaction ID. Please try again.",
+        variant: "destructive",
       });
     }
   };
@@ -567,26 +616,7 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
                       </motion.p>
                     )}
                   </div>
-                  <div className="space-y-3">
-                    <label className="text-lg font-medium text-red-400">Transaction ID</label>
-                    <div className="relative">
-                      <Input
-                        type="text"
-                        placeholder="Enter UPI Transaction ID"
-                        {...form.register("transactionId")}
-                        className="bg-white/5 border-red-500/20 text-white focus:ring-red-500/30 transition-all duration-300 text-lg font-medium h-12"
-                      />
-                    </div>
-                    {form.formState.errors.transactionId && (
-                      <motion.p
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="text-sm text-red-400 mt-1"
-                      >
-                        {form.formState.errors.transactionId.message}
-                      </motion.p>
-                    )}
-                  </div>
+
                   <div className="grid grid-cols-3 gap-6">
                     <motion.div
                       whileHover={{ scale: 1.05 }}
@@ -738,6 +768,65 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
                   )}
                 </div>
 
+                {!showVerification && paymentStatus === "pending" && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mt-4"
+                  >
+                    <Button
+                      variant="outline"
+                      className="w-full border-red-500/20 text-red-400 hover:bg-red-500/10"
+                      onClick={() => setShowVerification(true)}
+                    >
+                      I've Made the Payment
+                    </Button>
+                  </motion.div>
+                )}
+
+                {showVerification && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mt-4 space-y-4"
+                  >
+                    <form onSubmit={verificationForm.handleSubmit(handleVerificationSubmit)} className="space-y-4">
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium text-red-400">
+                          Enter your UPI Transaction ID
+                        </label>
+                        <Input
+                          type="text"
+                          {...verificationForm.register("transactionId")}
+                          className="bg-white/10 border-red-500/20"
+                          placeholder="Enter the transaction ID from your UPI app"
+                        />
+                        {verificationForm.formState.errors.transactionId && (
+                          <p className="text-sm text-red-400">
+                            {verificationForm.formState.errors.transactionId.message}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          type="submit"
+                          className="flex-1 bg-green-500 hover:bg-green-600"
+                        >
+                          Submit Transaction ID
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="border-red-500/20"
+                          onClick={() => setShowVerification(false)}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    </form>
+                  </motion.div>
+                )}
+
                 <motion.div
                   className="space-y-4 mb-4"
                   initial={{ opacity: 0, y: 20 }}
@@ -828,35 +917,18 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
                           {paymentStatus === "success" ? "Payment Successful" : "Payment Failed"}
                         </p>
                         {paymentStatus === "failed" && (
-                          <div className="mt-4 space-y-4">
+                          <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="mt-4 space-y-4"
+                          >
                             <p className="text-sm text-gray-400">
                               If you have made the payment, please submit your UPI transaction ID:
                             </p>
-                            <form onSubmit={(e) => {
-                              e.preventDefault();
-                              const txnId = (e.target as any).transactionId.value;
-                              if (txnId) {
-                                apiRequest("POST", "/api/transactions/verify", {
-                                  reference,
-                                  transactionId: txnId
-                                }).then(() => {
-                                  toast({
-                                    title: "✅ Transaction ID Submitted",
-                                    description: "We'll verify your payment and update the status shortly.",
-                                    variant: "default",
-                                  });
-                                }).catch(() => {
-                                  toast({
-                                    title: "❌ Submission Failed",
-                                    description: "Unable to submit transaction ID. Please try again.",
-                                    variant: "destructive",
-                                  });
-                                });
-                              }
-                            }} className="space-y-2">
+                            <form onSubmit={verificationForm.handleSubmit(handleVerificationSubmit)} className="space-y-2">
                               <Input
                                 type="text"
-                                name="transactionId"
+                                {...verificationForm.register("transactionId")}
                                 placeholder="Enter your UPI transaction ID"
                                 className="mb-2 bg-white/10 border-red-500/20"
                               />
@@ -864,7 +936,7 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
                                 Submit Transaction ID
                               </Button>
                             </form>
-                          </div>
+                          </motion.div>
                         )}
                       </div>
                     </div>
