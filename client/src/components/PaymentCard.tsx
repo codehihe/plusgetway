@@ -17,6 +17,7 @@ import { Timer, AlertTriangle, CheckCircle2, XCircle, IndianRupee, ExternalLink,
 import { Badge } from "@/components/ui/badge";
 import { SiGooglepay, SiPhonepe, SiPaytm } from "react-icons/si";
 import { getWebSocketUrl } from "@/lib/utils";
+import { v4 as uuidv4 } from 'uuid';
 
 const PAYMENT_TIMEOUT = 180; // 3 minutes in seconds
 const VERIFICATION_INTERVAL = 3000; // 3 seconds
@@ -402,6 +403,9 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
 
       setPaymentStatus("processing");
 
+      // Generate reference ID
+      const txReference = uuidv4();
+
       // Perform security checks
       const securityChecks = await performSecurityChecks(data.amount);
 
@@ -411,9 +415,10 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
         merchantName: upi.merchantName,
         status: "pending",
         deviceInfo: navigator.userAgent || "unknown",
-        ipAddress: window.location.hostname,
+        ipAddress: "127.0.0.1", // Use localhost as fallback
         paymentMethod: "upi",
         securityChecks,
+        reference: txReference
       });
 
       if (!response || !response.ok) {
@@ -429,7 +434,7 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
         throw new Error("Invalid transaction response");
       }
 
-      setReference(tx.reference);
+      setReference(txReference);
       setTimeLeft(PAYMENT_TIMEOUT);
       setPaymentStatus("pending");
       setShowQR(true);
@@ -788,13 +793,13 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
                   >
                     <div className="flex items-center gap-3">
                       {paymentStatus === "success" ? (
-                        <CheckCircle2 className="w-5 h-5 text-green-500" />
+                        <CheckCircle2 className="w-5 h-5 text-green500" />
                       ) : (
                         <XCircle className="w-5 h-5 text-red-500" />
                       )}
                       <div>
                         <p className={`font-medium ${
-                          paymentStatuspaymentStatus === "success" ? "text-green-400" : "text-red-400"
+                          paymentStatus === "success" ? "text-green-400" : "text-red-400"
                         }`}>
                           {paymentStatus === "success" ? "Payment Successful" : "Payment Failed"}
                         </p>
