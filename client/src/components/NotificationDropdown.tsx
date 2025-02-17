@@ -13,8 +13,9 @@ export default function NotificationDropdown() {
   const queryClient = useQueryClient();
 
   const { data: transactions } = useQuery<Transaction[]>({
-    queryKey: ["/api/transactions/recent"],
-    refetchInterval: 10000, // Refetch every 10 seconds
+    queryKey: ["/api/transactions"],
+    refetchInterval: 10000, // Refetch every 10 seconds,
+    select: (data) => data?.slice(0, 5) // Show only 5 most recent transactions
   });
 
   useEffect(() => {
@@ -78,7 +79,7 @@ export default function NotificationDropdown() {
                 <Bell className="h-5 w-5" />
                 Recent Transactions
               </h3>
-              <div className="space-y-3 max-h-[calc(100vh-200px)] overflow-y-auto custom-scrollbar">
+              <div className="space-y-3 max-h-[calc(100vh-200px)] overflow-y-auto custom-scrollbar pr-2">
                 {transactions?.length ? (
                   transactions.map((tx) => (
                     <motion.div
@@ -86,12 +87,12 @@ export default function NotificationDropdown() {
                       initial={{ x: -20, opacity: 0 }}
                       animate={{ x: 0, opacity: 1 }}
                       className={cn(
-                        "flex items-center justify-between p-4 rounded-lg border transition-all duration-200",
+                        "flex items-center justify-between p-4 rounded-lg border transition-all duration-200 backdrop-blur-sm shadow-lg",
                         tx.status === "pending" 
-                          ? "bg-orange-950/30 border-orange-500/20 hover:bg-orange-950/40"
+                          ? "bg-orange-950/30 border-orange-500/20 hover:bg-orange-950/40 hover:scale-102 hover:shadow-orange-500/20"
                           : tx.status === "success"
-                          ? "bg-green-950/30 border-green-500/20 hover:bg-green-950/40"
-                          : "bg-red-950/30 border-red-500/20 hover:bg-red-950/40"
+                          ? "bg-green-950/30 border-green-500/20 hover:bg-green-950/40 hover:scale-102 hover:shadow-green-500/20"
+                          : "bg-red-950/30 border-red-500/20 hover:bg-red-950/40 hover:scale-102 hover:shadow-red-500/20"
                       )}
                     >
                       <div>

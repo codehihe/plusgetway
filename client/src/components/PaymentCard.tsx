@@ -564,10 +564,18 @@ const PaymentCard = ({ upi }: { upi: UpiId }) => {
                   </Badge>
                 </h2>
                 <motion.p
-                  className="text-lg mt-2 text-gray-300"
-                >
-                  {upi.storeName}
-                </motion.p>
+                    className="text-lg mt-2 bg-gradient-to-r from-orange-300 via-red-400 to-orange-500 bg-clip-text text-transparent"
+                    animate={{
+                      backgroundPosition: ["0%", "100%", "0%"],
+                    }}
+                    transition={{
+                      duration: 5,
+                      repeat: Infinity,
+                      ease: "linear"
+                    }}
+                  >
+                    {upi.storeName}
+                  </motion.p>
               </div>
               <motion.div
                 whileHover={{ rotate: 360, scale: 1.2 }}
