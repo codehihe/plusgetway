@@ -1,24 +1,44 @@
 import { Bell, Check, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { useQuery } from "@tanstack/react-query";
-
-interface Transaction {
-  id: number;
-  amount: string;
-  status: "pending" | "success" | "failed";
-  timestamp: string;
-  reference: string;
-}
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { getWebSocketUrl } from "@/lib/utils";
+import { Transaction } from "@shared/schema";
+import { cn } from "@/lib/utils";
 
 export default function NotificationDropdown() {
   const [isOpen, setIsOpen] = useState(false);
+  const queryClient = useQueryClient();
 
   const { data: transactions } = useQuery<Transaction[]>({
     queryKey: ["/api/transactions/recent"],
+    refetchInterval: 10000, // Refetch every 10 seconds
   });
+
+  useEffect(() => {
+    const wsUrl = getWebSocketUrl();
+    const ws = new WebSocket(wsUrl);
+
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === 'payment_status' && data.status) {
+          // Invalidate and refetch transactions
+          queryClient.invalidateQueries({ queryKey: ["/api/transactions/recent"] });
+        }
+      } catch (error) {
+        console.error('WebSocket message parsing error:', error);
+      }
+    };
+
+    return () => {
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.close();
+      }
+    };
+  }, [queryClient]);
 
   return (
     <div className="relative">
@@ -34,9 +54,13 @@ export default function NotificationDropdown() {
         >
           <Bell className="h-6 w-6 text-orange-400" />
           {transactions?.length ? (
-            <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-orange-500 text-[10px] font-bold text-white flex items-center justify-center">
+            <motion.span
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-orange-500 text-[10px] font-bold text-white flex items-center justify-center"
+            >
               {transactions.length}
-            </span>
+            </motion.span>
           ) : null}
         </Button>
       </motion.div>
@@ -47,57 +71,72 @@ export default function NotificationDropdown() {
             initial={{ opacity: 0, y: 10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="absolute right-0 mt-2 w-80 z-50"
+            className="absolute right-0 mt-2 w-96 z-50"
           >
-            <Card className="p-4 backdrop-blur-lg bg-black/80 border-orange-500/20 overflow-hidden">
-              <h3 className="text-lg font-semibold text-orange-400 mb-4">Recent Transactions</h3>
-              <div className="space-y-3 max-h-96 overflow-y-auto">
+            <Card className="p-4 backdrop-blur-lg bg-black/90 border-orange-500/20 overflow-hidden shadow-xl">
+              <h3 className="text-lg font-semibold text-orange-400 mb-4 flex items-center gap-2">
+                <Bell className="h-5 w-5" />
+                Recent Transactions
+              </h3>
+              <div className="space-y-3 max-h-[calc(100vh-200px)] overflow-y-auto custom-scrollbar">
                 {transactions?.length ? (
                   transactions.map((tx) => (
                     <motion.div
                       key={tx.id}
                       initial={{ x: -20, opacity: 0 }}
                       animate={{ x: 0, opacity: 1 }}
-                      className="flex items-center justify-between p-3 bg-orange-950/30 rounded-lg border border-orange-500/10"
+                      className={cn(
+                        "flex items-center justify-between p-4 rounded-lg border transition-all duration-200",
+                        tx.status === "pending" 
+                          ? "bg-orange-950/30 border-orange-500/20 hover:bg-orange-950/40"
+                          : tx.status === "success"
+                          ? "bg-green-950/30 border-green-500/20 hover:bg-green-950/40"
+                          : "bg-red-950/30 border-red-500/20 hover:bg-red-950/40"
+                      )}
                     >
                       <div>
-                        <p className="text-sm font-medium text-white">
+                        <p className="text-sm font-medium text-white flex items-center gap-2">
                           ₹{tx.amount}
+                          {tx.status === "success" && (
+                            <span className="text-xs px-2 py-1 rounded-full bg-green-500/20 text-green-400">
+                              Approved
+                            </span>
+                          )}
+                          {tx.status === "failed" && (
+                            <span className="text-xs px-2 py-1 rounded-full bg-red-500/20 text-red-400">
+                              Declined
+                            </span>
+                          )}
                         </p>
-                        <p className="text-xs text-gray-400">
+                        <p className="text-xs text-gray-400 mt-1">
                           {new Date(tx.timestamp).toLocaleString()}
                         </p>
+                        <p className="text-xs text-gray-500 mt-0.5">
+                          Ref: {tx.reference}
+                        </p>
                       </div>
-                      {tx.status === "pending" ? (
+                      {tx.status === "pending" && (
                         <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-8 w-8 p-0 text-green-500 hover:text-green-400 hover:bg-green-500/10"
+                          <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="px-3 py-1 rounded-full bg-orange-500/20 text-orange-400 text-xs font-medium"
                           >
-                            <Check className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-8 w-8 p-0 text-red-500 hover:text-red-400 hover:bg-red-500/10"
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
+                            Pending Approval
+                          </motion.div>
                         </div>
-                      ) : (
-                        <span className={`text-xs px-2 py-1 rounded ${
-                          tx.status === "success" 
-                            ? "bg-green-500/20 text-green-400"
-                            : "bg-red-500/20 text-red-400"
-                        }`}>
-                          {tx.status.charAt(0).toUpperCase() + tx.status.slice(1)}
-                        </span>
                       )}
                     </motion.div>
                   ))
                 ) : (
-                  <p className="text-gray-400 text-center py-4">No recent transactions</p>
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="text-center py-8"
+                  >
+                    <Bell className="h-12 w-12 text-gray-500 mx-auto mb-4 opacity-50" />
+                    <p className="text-gray-400 text-sm">No recent transactions</p>
+                  </motion.div>
                 )}
               </div>
             </Card>
