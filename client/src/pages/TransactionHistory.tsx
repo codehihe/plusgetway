@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { ArrowLeft, CheckCircle, XCircle, Clock } from "lucide-react";
 import { motion } from "framer-motion";
-import { apiRequest } from "@/utils/api"; // Assuming this function exists for API calls
+import { apiRequest } from "@/lib/queryClient"; // Assuming this function exists for API calls
 
 export default function TransactionHistory() {
   const { data: transactions, isLoading, refetch } = useQuery<Transaction[]>({
