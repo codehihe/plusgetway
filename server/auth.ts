@@ -146,27 +146,22 @@ export function setupAuth(app: Express) {
 
   // Logout endpoint
   app.post("/api/logout", async (req, res, next) => {
-    try {
-      if (req.user) {
-        const userId = req.user.id;
-        req.session.destroy((err) => {
-          if (err) return next(err);
-          // Create audit log for logout
-          storage.createUserAuditLog({
-            userId,
-            action: "LOGOUT",
-            details: "User logout",
-            ipAddress: req.ip,
-            userAgent: req.get("user-agent") || ""
-          });
-          res.clearCookie('connect.sid');
-          res.sendStatus(200);
+    if (req.user) {
+      const userId = req.user.id;
+      req.logout((err) => {
+        if (err) return next(err);
+        // Create audit log for logout
+        storage.createUserAuditLog({
+          userId,
+          action: "LOGOUT",
+          details: "User logout",
+          ipAddress: req.ip,
+          userAgent: req.get("user-agent") || ""
         });
-      } else {
         res.sendStatus(200);
-      }
-    } catch (err) {
-      next(err);
+      });
+    } else {
+      res.sendStatus(200);
     }
   });
 
