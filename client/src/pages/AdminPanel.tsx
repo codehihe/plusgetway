@@ -147,6 +147,16 @@ export default function AdminPanel() {
                 <History className="h-5 w-5 text-red-400" />
               </Button>
             </Link>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={async () => {
+                await apiRequest('POST', '/api/logout');
+                setLocation('/');
+              }}
+            >
+              <LogOut className="h-5 w-5 text-red-400" />
+            </Button>
           </div>
         </motion.div>
 
