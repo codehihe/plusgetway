@@ -11,6 +11,50 @@ import { Badge } from "@/components/ui/badge";
 import { SiGooglepay, SiPhonepe, SiPaytm } from "react-icons/si";
 import NotificationDropdown from "@/components/NotificationDropdown";
 
+// Add new background patterns as SVG components
+const BackgroundPattern = () => (
+  <div className="absolute inset-0 overflow-hidden pointer-events-none">
+    <svg className="absolute w-[800px] h-[800px] -top-1/4 -left-1/4 opacity-30 animate-[spin_60s_linear_infinite]" viewBox="0 0 100 100">
+      <defs>
+        <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="rgb(255, 70, 0)" stopOpacity="0.2" />
+          <stop offset="100%" stopColor="rgb(255, 120, 0)" stopOpacity="0.1" />
+        </linearGradient>
+      </defs>
+      <path d="M50,0 A50,50 0 1,1 50,100 A50,50 0 1,1 50,0" fill="url(#gradient)" />
+    </svg>
+    <svg className="absolute w-[600px] h-[600px] -bottom-1/4 -right-1/4 opacity-20 animate-[spin_40s_linear_infinite_reverse]" viewBox="0 0 100 100">
+      <path d="M50,0 A50,50 0 1,1 50,100 A50,50 0 1,1 50,0" fill="url(#gradient)" />
+    </svg>
+  </div>
+);
+
+// Add floating bubbles background
+const FloatingBubbles = () => (
+  <div className="absolute inset-0 overflow-hidden pointer-events-none">
+    {[...Array(10)].map((_, i) => (
+      <motion.div
+        key={i}
+        className="absolute w-4 h-4 rounded-full bg-orange-500/10"
+        initial={{ 
+          x: Math.random() * window.innerWidth,
+          y: Math.random() * window.innerHeight
+        }}
+        animate={{
+          x: Math.random() * window.innerWidth,
+          y: Math.random() * window.innerHeight,
+          scale: [1, 1.5, 1],
+        }}
+        transition={{
+          duration: 10 + Math.random() * 20,
+          repeat: Infinity,
+          ease: "linear"
+        }}
+      />
+    ))}
+  </div>
+);
+
 export default function Home() {
   const [showAdminLogin, setShowAdminLogin] = useState(false);
 
@@ -20,24 +64,44 @@ export default function Home() {
 
   const activeUpiIds = upiIds?.filter(upi => upi.isActive && !upi.deletedAt) || [];
 
-  const container = {
-    hidden: { opacity: 0 },
-    show: {
+  // Enhanced animation variants
+  const pageVariants = {
+    initial: {
+      opacity: 0,
+      y: 20
+    },
+    animate: {
       opacity: 1,
+      y: 0,
       transition: {
-        staggerChildren: 0.1
+        duration: 0.6,
+        ease: [0.6, -0.05, 0.01, 0.99]
+      }
+    },
+    exit: {
+      opacity: 0,
+      y: -20,
+      transition: {
+        duration: 0.4
       }
     }
   };
 
-  const item = {
-    hidden: { y: 20, opacity: 0 },
-    show: { y: 0, opacity: 1 }
-  };
-
   return (
-    <div className="min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-orange-950 via-red-900 to-black">
-      <div className="w-full px-4 py-12 md:py-24">
+    <motion.div
+      initial="initial"
+      animate="animate"
+      exit="exit"
+      variants={pageVariants}
+      className="min-h-screen relative bg-gradient-to-br from-orange-950 via-red-900 to-black overflow-hidden"
+    >
+      <BackgroundPattern />
+      <FloatingBubbles />
+
+      {/* Add a subtle radial gradient overlay */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.8)_100%)]" />
+
+      <div className="relative w-full px-4 py-12 md:py-24">
         <div className="max-w-4xl mx-auto">
           {/* Add Notification Icon */}
           <div className="absolute top-4 right-4">
@@ -541,6 +605,6 @@ export default function Home() {
         open={showAdminLogin}
         onClose={() => setShowAdminLogin(false)}
       />
-    </div>
+    </motion.div>
   );
 }
