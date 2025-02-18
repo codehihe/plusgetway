@@ -233,12 +233,12 @@ export default function Home() {
 
             {/* Trust Badges Section - Updated spacing and hover effects */}
             <motion.div
-              className="max-w-6xl mx-auto px-4 py-12 md:py-16" // Increased vertical padding
+              className="max-w-6xl mx-auto px-4 py-12 md:py-16" 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
             >
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12"> {/* Increased gap */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12"> 
                 {[
                   { value: "100%", label: "Secure Transactions" },
                   { value: "24/7", label: "Customer Support" },
@@ -262,7 +262,7 @@ export default function Home() {
                     }}
                   >
                     <motion.div
-                      className="text-4xl font-bold bg-gradient-to-r from-orange-300 to-red-400 bg-clip-text text-transparent mb-4" // Increased margin
+                      className="text-4xl font-bold bg-gradient-to-r from-orange-300 to-red-400 bg-clip-text text-transparent mb-4" 
                       whileHover={{ scale: 1.1 }}
                       transition={{ type: "spring", stiffness: 400 }}
                     >
@@ -276,14 +276,17 @@ export default function Home() {
 
             {/* Website Banner */}
             <motion.div
-              className="w-full max-w-4xl mx-auto mt-12 p-8 rounded-2xl bg-gradient-to-r from-orange-950/90 to-red-900/90 border border-orange-500/20"
+              className="w-full max-w-4xl mx-auto mt-16 mb-12 p-10 rounded-3xl bg-gradient-to-r from-orange-950/90 to-red-900/90 border-2 border-orange-500/20 shadow-lg shadow-orange-500/10"
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              whileHover={{ scale: 1.02 }}
+              whileHover={{ 
+                scale: 1.02,
+                boxShadow: "0 20px 40px rgba(255, 98, 0, 0.15)"
+              }}
             >
               <motion.h2
-                className="text-3xl md:text-4xl font-bold text-center mb-4 animate-pulse"
+                className="text-4xl md:text-5xl font-bold text-center mb-6"
                 animate={{
                   background: ["linear-gradient(to right, #FFA726, #FF5722, #FFA726)"],
                   backgroundClip: "text",
@@ -294,35 +297,67 @@ export default function Home() {
               >
                 Plusenode Payment
               </motion.h2>
-              <p className="text-gray-400 text-center max-w-2xl mx-auto">
+              <p className="text-gray-300 text-center text-lg max-w-2xl mx-auto leading-relaxed">
                 Your trusted platform for seamless digital payments. Experience secure, instant, and hassle-free transactions with India's leading UPI payment system.
               </p>
+
+              {/* Added decorative elements */}
+              <motion.div 
+                className="absolute -top-4 -right-4 w-16 h-16 bg-orange-500/10 rounded-full"
+                animate={{
+                  scale: [1, 1.2, 1],
+                  rotate: [0, 180, 360],
+                }}
+                transition={{
+                  duration: 4,
+                  repeat: Infinity,
+                  ease: "linear"
+                }}
+              />
+              <motion.div 
+                className="absolute -bottom-4 -left-4 w-12 h-12 bg-red-500/10 rounded-full"
+                animate={{
+                  scale: [1.2, 1, 1.2],
+                  rotate: [360, 180, 0],
+                }}
+                transition={{
+                  duration: 4,
+                  repeat: Infinity,
+                  ease: "linear"
+                }}
+              />
             </motion.div>
 
-
-            {/* Statistics Section */}
+            {/* Statistics Section - Enhanced spacing and animations */}
             <motion.div
-              className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto mb-12"
+              className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto mb-16 px-6"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.25 }}
             >
-              <div className="text-center p-4 bg-white/5 rounded-lg">
-                <h3 className="text-2xl font-bold text-orange-400">10M+</h3>
-                <p className="text-gray-400 text-sm">Daily Transactions</p>
-              </div>
-              <div className="text-center p-4 bg-white/5 rounded-lg">
-                <h3 className="text-2xl font-bold text-orange-400">50K+</h3>
-                <p className="text-gray-400 text-sm">Active Merchants</p>
-              </div>
-              <div className="text-center p-4 bg-white/5 rounded-lg">
-                <h3 className="text-2xl font-bold text-orange-400">99.9%</h3>
-                <p className="text-gray-400 text-sm">Success Rate</p>
-              </div>
-              <div className="text-center p-4 bg-white/5 rounded-lg">
-                <h3 className="text-2xl font-bold text-orange-400">24/7</h3>
-                <p className="text-gray-400 text-sm">Support</p>
-              </div>
+              {[
+                { value: "10M+", label: "Daily Transactions" },
+                { value: "50K+", label: "Active Merchants" },
+                { value: "99.9%", label: "Success Rate" },
+                { value: "24/7", label: "Support" }
+              ].map((stat, index) => (
+                <motion.div
+                  key={index}
+                  className="text-center p-6 bg-white/5 rounded-2xl border border-orange-500/20 hover:bg-white/10 hover:border-orange-500/40 transition-all duration-300 transform hover:-translate-y-1"
+                  whileHover={{ scale: 1.05 }}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <motion.h3 
+                    className="text-2xl font-bold text-orange-400 mb-2"
+                    whileHover={{ scale: 1.1 }}
+                  >
+                    {stat.value}
+                  </motion.h3>
+                  <p className="text-gray-400 text-sm font-medium">{stat.label}</p>
+                </motion.div>
+              ))}
             </motion.div>
 
             {/* Payment Apps Section  - REPLACED */}
@@ -343,7 +378,7 @@ export default function Home() {
                   </div>
                 </Card>
 
-                <Card className="bg-white/5 border-orange-500/20 p-6 flex flex-col items-center space-y-4 mt-6"> {/* Added mt-6 for spacing */}
+                <Card className="bg-white/5 border-orange-500/20 p-6 flex flex-col items-center space-y-4 mt-6"> 
                   <div className="flex items-center gap-4">
                     <Shield className="w-8 h-8 text-orange-400" />
                     <div>
@@ -353,7 +388,7 @@ export default function Home() {
                   </div>
                 </Card>
 
-                <Card className="bg-white/5 border-orange-500/20 p-6 flex flex-col items-center space-y-4 mt-6"> {/* Added mt-6 for spacing */}
+                <Card className="bg-white/5 border-orange-500/20 p-6 flex flex-col items-center space-y-4 mt-6"> 
                   <div className="flex items-center gap-4">
                     <Zap className="w-8 h-8 text-orange-400" />
                     <div>
@@ -367,13 +402,13 @@ export default function Home() {
 
             {/* Payment Process Steps - Enhanced layout */}
             <motion.div
-              className="max-w-6xl mx-auto px-6 mb-24" // Increased bottom margin
+              className="max-w-6xl mx-auto px-6 mb-24" 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
             >
               <h2 className="text-3xl font-bold text-center text-orange-400 mb-16">How It Works</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-12"> {/* Increased gap */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-12"> 
                 {[
                   { step: 1, title: "Enter Amount", desc: "Simply enter the payment amount you wish to transfer" },
                   { step: 2, title: "Scan QR Code", desc: "Use any UPI app to scan the generated QR code" },
@@ -399,11 +434,11 @@ export default function Home() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="space-y-8 mb-16" // Increased spacing
+              className="space-y-8 mb-16" 
             >
               <h2 className="text-3xl font-bold text-orange-400 text-center mb-12">Why Choose Us</h2>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8"> {/* Increased gap */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8"> 
                 {[
                   { icon: Lock, title: "Secure Platform", desc: "Multi-layer security with real-time fraud detection" },
                   { icon: Zap, title: "Instant Payments", desc: "Lightning-fast transactions with immediate confirmation" },
