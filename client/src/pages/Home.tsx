@@ -280,7 +280,7 @@ export default function Home() {
               whileHover={{ scale: 1.02 }}
             >
               <motion.h2
-                className="text-3xl md:text-4xl font-bold text-center mb-4"
+                className="text-3xl md:text-4xl font-bold text-center mb-4 animate-pulse"
                 animate={{
                   background: ["linear-gradient(to right, #FFA726, #FF5722, #FFA726)"],
                   backgroundClip: "text",
@@ -340,7 +340,7 @@ export default function Home() {
                   </div>
                 </Card>
 
-                <Card className="bg-white/5 border-orange-500/20 p-6 flex flex-col items-center space-y-4">
+                <Card className="bg-white/5 border-orange-500/20 p-6 flex flex-col items-center space-y-4 mt-6"> {/* Added mt-6 for spacing */}
                   <div className="flex items-center gap-4">
                     <Shield className="w-8 h-8 text-orange-400" />
                     <div>
@@ -350,7 +350,7 @@ export default function Home() {
                   </div>
                 </Card>
 
-                <Card className="bg-white/5 border-orange-500/20 p-6 flex flex-col items-center space-y-4">
+                <Card className="bg-white/5 border-orange-500/20 p-6 flex flex-col items-center space-y-4 mt-6"> {/* Added mt-6 for spacing */}
                   <div className="flex items-center gap-4">
                     <Zap className="w-8 h-8 text-orange-400" />
                     <div>
