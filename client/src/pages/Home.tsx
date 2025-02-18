@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { UpiId } from "@shared/schema";
 import PaymentCard from "@/components/PaymentCard";
@@ -30,30 +30,64 @@ const BackgroundPattern = () => (
 );
 
 // Add floating bubbles background
-const FloatingBubbles = () => (
-  <div className="absolute inset-0 overflow-hidden pointer-events-none">
-    {[...Array(10)].map((_, i) => (
-      <motion.div
-        key={i}
-        className="absolute w-4 h-4 rounded-full bg-orange-500/10"
-        initial={{ 
-          x: Math.random() * window.innerWidth,
-          y: Math.random() * window.innerHeight
-        }}
-        animate={{
-          x: Math.random() * window.innerWidth,
-          y: Math.random() * window.innerHeight,
-          scale: [1, 1.5, 1],
-        }}
-        transition={{
-          duration: 10 + Math.random() * 20,
-          repeat: Infinity,
-          ease: "linear"
-        }}
-      />
-    ))}
-  </div>
-);
+const FloatingBubbles = () => {
+  const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
+
+  useEffect(() => {
+    const updateDimensions = () => {
+      setDimensions({
+        width: window.innerWidth,
+        height: window.innerHeight
+      });
+    };
+
+    updateDimensions();
+    window.addEventListener('resize', updateDimensions);
+
+    return () => window.removeEventListener('resize', updateDimensions);
+  }, []);
+
+  return (
+    <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      {[...Array(10)].map((_, i) => (
+        <motion.div
+          key={i}
+          className="absolute w-4 h-4 rounded-full bg-orange-500/10"
+          initial={{ 
+            x: Math.random() * dimensions.width,
+            y: Math.random() * dimensions.height
+          }}
+          animate={{
+            x: Math.random() * dimensions.width,
+            y: Math.random() * dimensions.height,
+            scale: [1, 1.5, 1],
+          }}
+          transition={{
+            duration: 10 + Math.random() * 20,
+            repeat: Infinity,
+            ease: "linear"
+          }}
+        />
+      ))}
+    </div>
+  );
+};
+
+// Animation variants
+const containerVariants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { y: 20, opacity: 0 },
+  show: { y: 0, opacity: 1 }
+};
 
 export default function Home() {
   const [showAdminLogin, setShowAdminLogin] = useState(false);
@@ -225,7 +259,7 @@ export default function Home() {
                   </motion.div>
                 ) : activeUpiIds.length > 0 ? (
                   <motion.div
-                    variants={container}
+                    variants={containerVariants}
                     initial="hidden"
                     animate="show"
                     className="space-y-6"
@@ -233,7 +267,7 @@ export default function Home() {
                     {activeUpiIds.map(upi => (
                       <motion.div
                         key={upi.id}
-                        variants={item}
+                        variants={itemVariants}
                         whileHover={{ scale: 1.02 }}
                         transition={{ type: "spring", stiffness: 300 }}
                       >
