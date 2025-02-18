@@ -231,14 +231,14 @@ export default function Home() {
             </motion.div>
 
 
-            {/* Trust Badges Section */}
+            {/* Trust Badges Section - Updated spacing and hover effects */}
             <motion.div
-              className="max-w-6xl mx-auto px-4 py-8"
+              className="max-w-6xl mx-auto px-4 py-12 md:py-16" // Increased vertical padding
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
             >
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12"> {/* Increased gap */}
                 {[
                   { value: "100%", label: "Secure Transactions" },
                   { value: "24/7", label: "Customer Support" },
@@ -247,8 +247,11 @@ export default function Home() {
                 ].map((stat, index) => (
                   <motion.div
                     key={index}
-                    className="p-6 bg-white/5 rounded-[2rem] border-2 border-orange-500/20 text-center transform hover:scale-105 transition-all duration-300 hover:bg-white/10 hover:border-orange-500/40 shadow-lg hover:shadow-orange-500/20"
-                    whileHover={{ y: -5 }}
+                    className="p-8 bg-white/5 rounded-[2rem] border-2 border-orange-500/20 text-center transform transition-all duration-500 hover:scale-110 hover:-translate-y-2 hover:bg-white/10 hover:border-orange-500/40 hover:shadow-2xl hover:shadow-orange-500/20"
+                    whileHover={{
+                      rotate: [0, -2, 2, 0],
+                      transition: { duration: 0.3 }
+                    }}
                     initial={{ scale: 0.5, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{
@@ -259,13 +262,13 @@ export default function Home() {
                     }}
                   >
                     <motion.div
-                      className="text-4xl font-bold bg-gradient-to-r from-orange-300 to-red-400 bg-clip-text text-transparent mb-2"
+                      className="text-4xl font-bold bg-gradient-to-r from-orange-300 to-red-400 bg-clip-text text-transparent mb-4" // Increased margin
                       whileHover={{ scale: 1.1 }}
                       transition={{ type: "spring", stiffness: 400 }}
                     >
                       {stat.value}
                     </motion.div>
-                    <p className="text-gray-400">{stat.label}</p>
+                    <p className="text-gray-400 font-medium">{stat.label}</p>
                   </motion.div>
                 ))}
               </div>
@@ -362,173 +365,140 @@ export default function Home() {
               </div>
             </motion.div>
 
-            {/* New Section: Payment Process Steps */}
+            {/* Payment Process Steps - Enhanced layout */}
             <motion.div
-              className="max-w-6xl mx-auto px-4 mb-16"
+              className="max-w-6xl mx-auto px-6 mb-24" // Increased bottom margin
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
             >
-              <h2 className="text-3xl font-bold text-center text-orange-400 mb-12">How It Works</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div className="relative p-6 bg-white/5 rounded-lg border border-orange-500/20">
-                  <div className="absolute -top-4 left-4 w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold">
-                    1
-                  </div>
-                  <h3 className="text-xl font-semibold text-orange-400 mt-4 mb-3">Enter Amount</h3>
-                  <p className="text-gray-400">Simply enter the payment amount you wish to transfer</p>
-                </div>
-                <div className="relative p-6 bg-white/5 rounded-lg border border-orange-500/20">
-                  <div className="absolute -top-4 left-4 w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold">
-                    2
-                  </div>
-                  <h3 className="text-xl font-semibold text-orange-400 mt-4 mb-3">Scan QR Code</h3>
-                  <p className="text-gray-400">Use any UPI app to scan the generated QR code</p>
-                </div>
-                <div className="relative p-6 bg-white/5 rounded-lg border border-orange-500/20">
-                  <div className="absolute -top-4 left-4 w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold">
-                    3
-                  </div>
-                  <h3 className="text-xl font-semibold text-orange-400 mt-4 mb-3">Confirm Payment</h3>
-                  <p className="text-gray-400">Verify and confirm the payment in your UPI app</p>
-                </div>
+              <h2 className="text-3xl font-bold text-center text-orange-400 mb-16">How It Works</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-12"> {/* Increased gap */}
+                {[
+                  { step: 1, title: "Enter Amount", desc: "Simply enter the payment amount you wish to transfer" },
+                  { step: 2, title: "Scan QR Code", desc: "Use any UPI app to scan the generated QR code" },
+                  { step: 3, title: "Confirm Payment", desc: "Verify and confirm the payment in your UPI app" }
+                ].map(({ step, title, desc }) => (
+                  <motion.div
+                    key={step}
+                    className="relative p-8 bg-white/5 rounded-2xl border-2 border-orange-500/20 hover:border-orange-500/40 transition-all duration-300 hover:shadow-xl hover:shadow-orange-500/20 hover:-translate-y-2"
+                    whileHover={{ scale: 1.05 }}
+                  >
+                    <div className="absolute -top-6 left-6 w-12 h-12 bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-lg transform hover:scale-110 transition-transform">
+                      {step}
+                    </div>
+                    <h3 className="text-2xl font-semibold text-orange-400 mt-6 mb-4">{title}</h3>
+                    <p className="text-gray-400 text-lg">{desc}</p>
+                  </motion.div>
+                ))}
               </div>
             </motion.div>
 
-            <div className="max-w-lg mx-auto px-4 pb-12">
+            {/* Trust Indicators - Enhanced grid layout */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="space-y-8 mb-16" // Increased spacing
+            >
+              <h2 className="text-3xl font-bold text-orange-400 text-center mb-12">Why Choose Us</h2>
 
-              {/* Trust Indicators */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="space-y-6"
-              >
-                <h2 className="text-2xl font-semibold text-orange-400 mb-6">Why Choose Us</h2>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="flex items-start gap-4 p-6 rounded-lg bg-white/5 hover:bg-white/10 transition-all duration-300 cursor-pointer">
-                    <div className="p-2 bg-orange-500/10 rounded-lg">
-                      <Lock className="h-6 w-6 text-orange-400" />
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-medium text-orange-300">Secure Platform</h3>
-                      <p className="text-sm text-gray-400 mt-1">
-                        Multi-layer security with real-time fraud detection
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-4 p-6 rounded-lg bg-white/5 hover:bg-white/10 transition-all duration-300 cursor-pointer">
-                    <div className="p-2 bg-orange-500/10 rounded-lg">
-                      <Zap className="h-6 w-6 text-orange-400" />
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-medium text-orange-300">Instant Payments</h3>
-                      <p className="text-sm text-gray-400 mt-1">
-                        Lightning-fast transactions with immediate confirmation
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-4 p-6 rounded-lg bg-white/5 hover:bg-white/10 transition-all duration-300 cursor-pointer">
-                    <div className="p-2 bg-orange-500/10 rounded-lg">
-                      <Smartphone className="h-6 w-6 text-orange-400" />
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-medium text-orange-300">Universal Compatibility</h3>
-                      <p className="text-sm text-gray-400 mt-1">
-                        Works with all major UPI apps and providers
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-4 p-6 rounded-lg bg-white/5 hover:bg-white/10 transition-all duration-300 cursor-pointer">
-                    <div className="p-2 bg-orange-500/10 rounded-lg">
-                      <Clock className="h-6 w-6 text-orange-400" />
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-medium text-orange-300">24/7 Support</h3>
-                      <p className="text-sm text-gray-400 mt-1">
-                        Round-the-clock assistance for all your payment needs
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-
-
-              {/* Features Grid - More Cartoonish */}
-              <motion.div
-                className="max-w-4xl mx-auto px-4 mb-16"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-              >
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  {[
-                    {
-                      icon: Shield,
-                      title: "Super Secure",
-                      description: "Bank-grade protection for your money",
-                      color: "orange"
-                    },
-                    {
-                      icon: Zap,
-                      title: "Lightning Fast",
-                      description: "Instant payments at your fingertips",
-                      color: "red"
-                    }
-                  ].map((feature, index) => (
-                    <motion.div
-                      key={index}
-                      className={`p-8 rounded-[2rem] bg-gradient-to-br from-${feature.color}-950/90 to-${feature.color}-900/50 border-2 border-${feature.color}-500/20 hover:border-${feature.color}-500/40 transform hover:scale-105 transition-all duration-300`}
-                      whileHover={{ y: -5 }}
-                      initial={{ x: index % 2 === 0 ? -50 : 50, opacity: 0 }}
-                      animate={{ x: 0, opacity: 1 }}
-                      transition={{ delay: index * 0.2 }}
-                    >
-                      <motion.div
-                        className={`w-16 h-16 rounded-2xl bg-${feature.color}-500/20 p-4 mb-4`}
-                        whileHover={{ rotate: 360 }}
-                        transition={{ duration: 0.8, type: "spring" }}
-                      >
-                        <feature.icon className={`w-full h-full text-${feature.color}-400`} />
-                      </motion.div>
-                      <h3 className={`text-2xl font-bold text-${feature.color}-400 mb-2`}>
-                        {feature.title}
-                      </h3>
-                      <p className="text-gray-400">
-                        {feature.description}
-                      </p>
-                    </motion.div>
-                  ))}
-                </div>
-              </motion.div>
-
-              {/* Admin Access Section */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.4 }}
-                className="mt-16 pt-8 border-t border-orange-500/20"
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-lg font-medium text-orange-300">Admin Access</h3>
-                    <p className="text-sm text-gray-400">Secure administrative controls</p>
-                  </div>
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowAdminLogin(true)}
-                    className="border-orange-500/20 text-orange-400 hover:bg-orange-500/10"
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8"> {/* Increased gap */}
+                {[
+                  { icon: Lock, title: "Secure Platform", desc: "Multi-layer security with real-time fraud detection" },
+                  { icon: Zap, title: "Instant Payments", desc: "Lightning-fast transactions with immediate confirmation" },
+                  { icon: Smartphone, title: "Universal Compatibility", desc: "Works with all major UPI apps and providers" },
+                  { icon: Clock, title: "24/7 Support", desc: "Round-the-clock assistance for all your payment needs" }
+                ].map(({ icon: Icon, title, desc }, index) => (
+                  <motion.div
+                    key={index}
+                    className="group flex items-start gap-6 p-8 rounded-2xl bg-white/5 hover:bg-white/10 transition-all duration-500 hover:shadow-xl hover:shadow-orange-500/20 transform hover:-translate-y-1"
+                    whileHover={{ scale: 1.02 }}
                   >
-                    <Settings className="h-4 w-4 mr-2" />
-                    Admin Login
-                  </Button>
+                    <div className="p-4 bg-orange-500/10 rounded-xl group-hover:bg-orange-500/20 transition-all duration-300">
+                      <Icon className="h-8 w-8 text-orange-400 group-hover:scale-110 transition-transform" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-semibold text-orange-300 mb-3">{title}</h3>
+                      <p className="text-gray-400 text-lg leading-relaxed">
+                        {desc}
+                      </p>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+
+            {/* Features Grid - More Cartoonish */}
+            <motion.div
+              className="max-w-4xl mx-auto px-4 mb-16"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {[
+                  {
+                    icon: Shield,
+                    title: "Super Secure",
+                    description: "Bank-grade protection for your money",
+                    color: "orange"
+                  },
+                  {
+                    icon: Zap,
+                    title: "Lightning Fast",
+                    description: "Instant payments at your fingertips",
+                    color: "red"
+                  }
+                ].map((feature, index) => (
+                  <motion.div
+                    key={index}
+                    className={`p-8 rounded-[2rem] bg-gradient-to-br from-${feature.color}-950/90 to-${feature.color}-900/50 border-2 border-${feature.color}-500/20 hover:border-${feature.color}-500/40 transform hover:scale-105 transition-all duration-300`}
+                    whileHover={{ y: -5 }}
+                    initial={{ x: index % 2 === 0 ? -50 : 50, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ delay: index * 0.2 }}
+                  >
+                    <motion.div
+                      className={`w-16 h-16 rounded-2xl bg-${feature.color}-500/20 p-4 mb-4`}
+                      whileHover={{ rotate: 360 }}
+                      transition={{ duration: 0.8, type: "spring" }}
+                    >
+                      <feature.icon className={`w-full h-full text-${feature.color}-400`} />
+                    </motion.div>
+                    <h3 className={`text-2xl font-bold text-${feature.color}-400 mb-2`}>
+                      {feature.title}
+                    </h3>
+                    <p className="text-gray-400">
+                      {feature.description}
+                    </p>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+
+            {/* Admin Access Section */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.4 }}
+              className="mt-16 pt-8 border-t border-orange-500/20"
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-medium text-orange-300">Admin Access</h3>
+                  <p className="text-sm text-gray-400">Secure administrative controls</p>
                 </div>
-              </motion.div>
-            </div>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowAdminLogin(true)}
+                  className="border-orange-500/20 text-orange-400 hover:bg-orange-500/10"
+                >
+                  <Settings className="h-4 w-4 mr-2" />
+                  Admin Login
+                </Button>
+              </div>
+            </motion.div>
           </div>
         </div>
       </div>
