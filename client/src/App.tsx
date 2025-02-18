@@ -60,7 +60,7 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="relative min-h-screen bg-gradient-to-br from-orange-950 via-red-900 to-black">
+      <div className="relative min-h-screen bg-gradient-to-br from-orange-950 via-red-900 to-black overflow-hidden">
         <Router />
         <Toaster />
       </div>
