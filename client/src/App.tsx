@@ -11,12 +11,14 @@ import NotFound from "@/pages/not-found";
 // Page transition wrapper component
 const PageTransition = ({ children }: { children: React.ReactNode }) => (
   <motion.div
-    initial={{ opacity: 0 }}
-    animate={{ opacity: 1 }}
-    exit={{ opacity: 0 }}
+    initial={{ opacity: 0, scale: 0.98 }}
+    animate={{ opacity: 1, scale: 1 }}
+    exit={{ opacity: 0, scale: 1.02 }}
     transition={{
-      type: "tween",
-      duration: 0.2
+      type: "spring",
+      stiffness: 100,
+      damping: 20,
+      duration: 0.3
     }}
     className="w-full h-full"
   >
@@ -58,7 +60,7 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="relative min-h-screen bg-black">
+      <div className="relative min-h-screen bg-gradient-to-br from-orange-950 via-red-900 to-black">
         <Router />
         <Toaster />
       </div>
