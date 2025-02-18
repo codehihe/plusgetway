@@ -322,33 +322,44 @@ export default function Home() {
               </div>
             </motion.div>
 
-            {/* Payment Apps Section */}
+            {/* Payment Apps Section  - REPLACED */}
             <motion.div
               className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto mb-12"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
             >
-              <Card className="bg-white/5 border-orange-500/20 p-6 flex flex-col items-center space-y-4 hover:bg-white/10 transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-orange-500/10">
-                <motion.div
-                  whileHover={{ rotate: 360 }}
-                  transition={{ duration: 0.5 }}
-                >
-                  <SiGooglepay className="w-16 h-16 text-white/80" />
-                </motion.div>
-                <h3 className="text-lg font-medium text-orange-400">Google Pay</h3>
-                <p className="text-sm text-gray-400 text-center">Quick and secure payments through Google Pay</p>
-              </Card>
-              <Card className="bg-white/5 border-orange-500/20 p-6 flex flex-col items-center space-y-4">
-                <SiPhonepe className="w-16 h-16 text-white/80" />
-                <h3 className="text-lg font-medium text-orange-400">PhonePe</h3>
-                <p className="text-sm text-gray-400 text-center">India's most trusted payment platform</p>
-              </Card>
-              <Card className="bg-white/5 border-orange-500/20 p-6 flex flex-col items-center space-y-4">
-                <SiPaytm className="w-16 h-16 text-white/80" />
-                <h3 className="text-lg font-medium text-orange-400">Paytm</h3>
-                <p className="text-sm text-gray-400 text-center">Seamless payments with Paytm wallet</p>
-              </Card>
+              <div className="grid grid-cols-1 gap-6">
+                <Card className="bg-white/5 border-orange-500/20 p-6 flex flex-col items-center space-y-4">
+                  <div className="flex items-center gap-4">
+                    <Clock className="w-8 h-8 text-orange-400" />
+                    <div>
+                      <h3 className="text-lg font-medium text-orange-400">24/7 Support</h3>
+                      <p className="text-sm text-gray-400">Round-the-clock assistance for all your payment needs</p>
+                    </div>
+                  </div>
+                </Card>
+
+                <Card className="bg-white/5 border-orange-500/20 p-6 flex flex-col items-center space-y-4">
+                  <div className="flex items-center gap-4">
+                    <Shield className="w-8 h-8 text-orange-400" />
+                    <div>
+                      <h3 className="text-lg font-medium text-orange-400">Super Secure</h3>
+                      <p className="text-sm text-gray-400">Bank-grade protection for your money</p>
+                    </div>
+                  </div>
+                </Card>
+
+                <Card className="bg-white/5 border-orange-500/20 p-6 flex flex-col items-center space-y-4">
+                  <div className="flex items-center gap-4">
+                    <Zap className="w-8 h-8 text-orange-400" />
+                    <div>
+                      <h3 className="text-lg font-medium text-orange-400">Lightning Fast</h3>
+                      <p className="text-sm text-gray-400">Instant payments at your fingertips</p>
+                    </div>
+                  </div>
+                </Card>
+              </div>
             </motion.div>
 
             {/* New Section: Payment Process Steps */}
