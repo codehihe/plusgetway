@@ -93,7 +93,7 @@ export default function LandingPage() {
               key={index}
               variants={itemVariants}
               whileHover={{ scale: 1.05, y: -5 }}
-              className="bg-gradient-to-br from-slate-950/90 to-blue-900/90 p-6 rounded-xl border border-orange-500/20 backdrop-blur-lg hover:border-orange-500/40 transition-all duration-300"
+              className="bg-gradient-to-br from-slate-950/90 to-blue-900/90 p-6 rounded-xl border border-orange-500/20 backdrop-blur-lg hover:border-orange-500/40 transition-all duration-300 hover:bg-gradient-to-br hover:from-slate-900/90 hover:to-indigo-900/90 hover:shadow-xl hover:shadow-orange-500/10"
             >
               <feature.icon className="h-12 w-12 text-orange-400 mb-4" />
               <h3 className="text-xl font-semibold text-white mb-2">{feature.title}</h3>
@@ -165,12 +165,13 @@ export default function LandingPage() {
         >
           <Button
             size="lg"
-            className="bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-lg px-8 py-6"
-            onClick={() => setLocation("/home")}
+            className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 text-lg px-8 py-6 shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300"
+            onClick={() => window.open('https://discord.gg/25KQBBwT2D', '_blank')}
           >
-            Start Processing Payments
-            <IndianRupee className="ml-2 h-5 w-5" />
+            Join Our Community
+            <ArrowRight className="ml-2 h-5 w-5 animate-bounce" />
           </Button>
+          <p className="mt-4 text-gray-400 text-sm">Join our Discord server for exclusive updates and support</p>
         </motion.div>
       </div>
     </div>
