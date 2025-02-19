@@ -14,9 +14,9 @@ export default function NotificationDropdown() {
 
   const { data: transactions } = useQuery<Transaction[]>({
     queryKey: ["/api/transactions"],
-    refetchInterval: 5000, // Reduced to 5 seconds for faster updates
-    select: (data) => data?.slice(0, 5), // Show only 5 most recent transactions
-    staleTime: 2000, // Add staleTime to prevent unnecessary refetches
+    refetchInterval: 5000,
+    select: (data) => data?.slice(0, 5),
+    staleTime: 2000,
   });
 
   useEffect(() => {
@@ -31,7 +31,6 @@ export default function NotificationDropdown() {
         try {
           const data = JSON.parse(event.data);
           if (data.type === 'payment_status' && data.status) {
-            // Optimistic update before refetching
             queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
           }
         } catch (error) {
@@ -40,7 +39,6 @@ export default function NotificationDropdown() {
       };
 
       ws.onclose = () => {
-        // Attempt to reconnect after 2 seconds
         reconnectTimeout = setTimeout(connectWebSocket, 2000);
       };
 
@@ -60,25 +58,24 @@ export default function NotificationDropdown() {
     };
   }, [queryClient]);
 
-  // Animation variants
   const dropdownVariants = {
     hidden: { opacity: 0, y: -5, scale: 0.95 },
-    visible: { 
-      opacity: 1, 
-      y: 0, 
+    visible: {
+      opacity: 1,
+      y: 0,
       scale: 1,
       transition: {
         type: "spring",
-        duration: 0.2,
+        duration: 0.3,
         stiffness: 500,
         damping: 25
       }
     },
-    exit: { 
-      opacity: 0, 
+    exit: {
+      opacity: 0,
       scale: 0.95,
       transition: {
-        duration: 0.15
+        duration: 0.2
       }
     }
   };
@@ -89,8 +86,26 @@ export default function NotificationDropdown() {
     exit: { x: 20, opacity: 0 }
   };
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const dropdown = document.getElementById('notification-dropdown');
+      if (dropdown && !dropdown.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen]);
+
   return (
-    <div className="relative">
+    <div className="relative" id="notification-dropdown">
       <motion.div
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
@@ -102,7 +117,15 @@ export default function NotificationDropdown() {
           className="relative"
           onClick={() => setIsOpen(!isOpen)}
         >
-          <Bell className="h-6 w-6 text-orange-400" />
+          <motion.div
+            animate={transactions?.length ? {
+              scale: [1, 1.2, 1],
+              rotate: [0, 10, -10, 0]
+            } : {}}
+            transition={{ duration: 0.5 }}
+          >
+            <Bell className="h-6 w-6 text-orange-400" />
+          </motion.div>
           {transactions?.length ? (
             <motion.span
               initial={{ scale: 0 }}
@@ -112,7 +135,7 @@ export default function NotificationDropdown() {
                 stiffness: 500,
                 damping: 25
               }}
-              className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-orange-500 text-[10px] font-bold text-white flex items-center justify-center"
+              className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-orange-500 text-[10px] font-bold text-white flex items-center justify-center"
             >
               {transactions.length}
             </motion.span>
@@ -127,17 +150,24 @@ export default function NotificationDropdown() {
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="absolute right-0 mt-2 w-96 z-50"
+            className="absolute right-0 mt-2 w-96 z-50 max-h-[80vh] overflow-hidden"
           >
             <Card className="p-4 backdrop-blur-lg bg-gradient-to-br from-black/95 to-black/80 border-orange-500/30 overflow-hidden shadow-2xl">
-              <h3 className="text-xl font-bold text-orange-400 mb-6 flex items-center gap-2 border-b border-orange-500/20 pb-3">
-                <Bell className="h-5 w-5" />
-                Recent Transactions
-              </h3>
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+              >
+                <h3 className="text-xl font-bold text-orange-400 mb-6 flex items-center gap-2 border-b border-orange-500/20 pb-3">
+                  <Bell className="h-5 w-5" />
+                  Recent Transactions
+                </h3>
+              </motion.div>
+
               <div className="space-y-4 max-h-[calc(100vh-200px)] overflow-y-auto custom-scrollbar pr-2">
                 <AnimatePresence mode="popLayout">
                   {transactions?.length ? (
-                    transactions.map((tx) => (
+                    transactions.map((tx, index) => (
                       <motion.div
                         key={tx.id}
                         layout
@@ -145,6 +175,7 @@ export default function NotificationDropdown() {
                         initial="hidden"
                         animate="visible"
                         exit="exit"
+                        transition={{ delay: index * 0.1 }}
                         className={cn(
                           "flex items-center justify-between p-4 rounded-lg border transition-all duration-300 backdrop-blur-sm shadow-lg hover:scale-[1.02] hover:-translate-y-0.5",
                           tx.status === "pending" 

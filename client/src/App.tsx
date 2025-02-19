@@ -7,6 +7,7 @@ import Home from "@/pages/Home";
 import AdminPanel from "@/pages/AdminPanel";
 import TransactionHistory from "@/pages/TransactionHistory";
 import NotFound from "@/pages/not-found";
+import LandingPage from "@/pages/LandingPage";
 
 // Page transition wrapper component
 const PageTransition = ({ children }: { children: React.ReactNode }) => (
@@ -33,6 +34,11 @@ function Router() {
     <AnimatePresence mode="wait" initial={false}>
       <Switch key={location}>
         <Route path="/">
+          <PageTransition>
+            <LandingPage />
+          </PageTransition>
+        </Route>
+        <Route path="/home">
           <PageTransition>
             <Home />
           </PageTransition>
