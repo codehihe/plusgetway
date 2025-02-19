@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
 import { IndianRupee, Shield, Smartphone, Clock, ArrowRight } from "lucide-react";
 
+const [_, setLocation] = useLocation();
+
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-950 via-red-900 to-black">
@@ -101,15 +103,14 @@ export default function LandingPage() {
           <p className="text-gray-300 mb-8 max-w-2xl mx-auto">
             Join thousands of businesses already using our secure UPI payment platform.
           </p>
-          <Link href="/home">
-            <Button
-              size="lg"
-              className="bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700"
-            >
-              Start Processing Payments
-              <IndianRupee className="ml-2 h-5 w-5" />
-            </Button>
-          </Link>
+          <Button
+            size="lg"
+            className="bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700"
+            onClick={() => setLocation("/home")}
+          >
+            Start Processing Payments
+            <IndianRupee className="ml-2 h-5 w-5" />
+          </Button>
         </motion.div>
       </div>
     </div>
