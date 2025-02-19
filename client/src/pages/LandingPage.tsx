@@ -44,32 +44,25 @@ export default function LandingPage() {
             </span>
           </motion.div>
           
-          <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-orange-300 via-red-400 to-orange-500 text-transparent bg-clip-text">
+          <h1 
+            className="text-4xl sm:text-5xl md:text-7xl font-bold mb-6 animate-text-gradient bg-gradient-to-r from-orange-300 via-red-400 to-orange-500 bg-300% text-transparent bg-clip-text"
+          >
             Next-Gen UPI Payments
           </h1>
           <p className="text-lg sm:text-xl text-gray-300 mb-8 max-w-3xl mx-auto px-4">
             Experience the future of digital transactions with our advanced UPI platform.
             Featuring real-time tracking, instant notifications, and bank-grade security.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Button
-              size="lg"
-              className="bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-base sm:text-lg px-6 sm:px-8 py-4 sm:py-6 rounded-full transform hover:scale-105 transition-all duration-300 w-full sm:w-auto"
-              onClick={() => setLocation("/home")}
-            >
-              Get Started Now
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-            <Button
-              variant="outline"
-              size="lg"
-              className="border-orange-500/20 hover:border-orange-500/40 text-orange-400 hover:text-orange-300 w-full sm:w-auto"
-              onClick={() => setLocation("/docs")}
-            >
-              View Documentation
-              <ChevronRight className="ml-2 h-5 w-5" />
-            </Button>
-          </div>
+          <div className="flex justify-center items-center">
+              <Button
+                size="lg"
+                className="bg-gradient-to-r from-orange-500 via-red-600 to-orange-500 hover:from-orange-600 hover:via-red-700 hover:to-orange-600 text-base sm:text-lg px-8 sm:px-12 py-6 sm:py-8 rounded-full transform hover:scale-105 transition-all duration-300 shadow-xl hover:shadow-orange-500/30 animate-gradient-x font-bold"
+                onClick={() => setLocation("/home")}
+              >
+                Get Started Now
+                <ArrowRight className="ml-3 h-6 w-6" />
+              </Button>
+            </div>
         </motion.div>
 
         {/* Features Grid */}
