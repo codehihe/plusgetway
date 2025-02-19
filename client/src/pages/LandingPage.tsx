@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Link } from "wouter";
+import { useLocation } from "wouter";
 import { IndianRupee, Shield, Smartphone, Clock, ArrowRight } from "lucide-react";
 
 export default function LandingPage() {
@@ -21,15 +21,14 @@ export default function LandingPage() {
             Experience seamless and secure digital transactions with our advanced UPI payment platform.
             Real-time tracking, instant notifications, and enhanced security measures.
           </p>
-          <Link href="/home">
-            <Button
-              size="lg"
-              className="bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-lg px-8 py-6 rounded-full transform hover:scale-105 transition-all duration-300"
-            >
-              Get Started
-              <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-          </Link>
+          <Button
+            size="lg"
+            className="bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700 text-lg px-8 py-6 rounded-full transform hover:scale-105 transition-all duration-300"
+            onClick={() => setLocation("/home")}
+          >
+            Get Started
+            <ArrowRight className="ml-2 h-5 w-5" />
+          </Button>
         </motion.div>
 
         {/* Features Grid */}

@@ -32,7 +32,7 @@ function Router() {
 
   return (
     <AnimatePresence mode="wait" initial={false}>
-      <Switch key={location}>
+      <Switch>
         <Route path="/">
           <PageTransition>
             <LandingPage />
