@@ -1,7 +1,11 @@
 {
   "version": 2,
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist/public",
+  "builds": [
+    {
+      "src": "api/index.ts",
+      "use": "@vercel/node"
+    }
+  ],
   "functions": {
     "api/index.ts": {
       "maxDuration": 30
@@ -10,10 +14,6 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "/api/index.ts"
-    },
-    {
-      "source": "/ws",
       "destination": "/api/index.ts"
     },
     {
