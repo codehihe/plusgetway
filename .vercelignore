@@ -1,0 +1,15 @@
+node_modules
+.env
+.env.local
+.env.production.local
+.env.development.local
+.git
+README.md
+.gitignore
+client/src
+server/vite.ts
+vite.config.ts
+postcss.config.js
+tailwind.config.ts
+.replit
+*.log
